@@ -1,23 +1,41 @@
 # Django imports
 from django import forms
+from django.contrib.auth import authenticate
 from django.utils.translation import ugetext_lazy as _
 
 # Locale imports
-from . import constants
 from .models import Sobre, Persona, TipoIngreso, Observacion
+from .mixins import CustomForm, CustomModelForm
 
 
-class CustomModelForm(forms.ModelForm):
-    """Clase de base para trabajar con forms."""
+class FormularioLogearUsuario(CustomForm):
+    """Formulario para el login de usuarios en el sistema."""
 
-    error_css_class = constants.CSS_ERROR_CLASS
+    email = forms.EmailField(label=_('Email'))
+    password = forms.CharField(label=_('Contraseña'), widget=forms.PasswordInput)
 
     def __init__(self, *args, **kwargs):
+        self.user_cache = None
         super().__init__(*args, **kwargs)
-        for field in self.fields:
-            self.fields[field].widget.attrs.update({
-                'class': constants.INPUT_CLASS
-            })
+
+    def clean(self, *args, **kwargs):
+        cleaned_data = super().clean(*args, **kwargs)
+
+        email = cleaned_data.get('email')
+        password = cleaned_data.get('password')
+
+        self.user_cache = authenticate(email=email, password=password)
+
+        if self.user_cache is None:
+            raise forms.ValidationError(_('Usuario no encontrado'))
+        elif self.user_cache.is_active is None:
+            raise forms.ValidationError(_('Usuario Inactivo'))
+
+        return cleaned_data
+
+    def get_user(self):
+        """Retorna el usuario creado en memoria por el formulario."""
+        return self.user_cache
 
 
 class FormularioCrearSobre(CustomModelForm):
