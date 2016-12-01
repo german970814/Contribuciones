@@ -1,7 +1,7 @@
 # Django imports
 from django import forms
 from django.contrib.auth import authenticate
-from django.utils.translation import ugetext_lazy as _
+from django.utils.translation import ugettext_lazy as _
 
 # Locale imports
 from .models import Sobre, Persona, TipoIngreso, Observacion
@@ -93,5 +93,5 @@ class FormularioCrearObservacion(CustomModelForm):
     class Meta:
         model = Observacion
         fields = (
-            'texto'
+            'texto',
         )

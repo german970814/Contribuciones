@@ -2,10 +2,11 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
 from django.contrib import messages
-from django.utils.translation import ugetext as _
+from django.utils.translation import ugettext as _
 from django.core.urlresolvers import reverse, reverse_lazy
 from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic import ListView
+from django.contrib.auth.decorators import login_required
 
 # Locale imports
 from .constants import MAIN, ERROR_FORM
@@ -41,17 +42,20 @@ def login_view(request):
                 return redirect(next_page)
             # de lo contrario va a /home/
             return redirect('main:home')
+        else:
+            # lanza el error
+            messages.error(
+                request,
+                _(ERROR_FORM)
+            )
     else:
         # crea el formulario en GET
         form = FormularioLogearUsuario()
-        messages.error(
-            request,
-            _(ERROR_FORM)
-        )
 
     return render(request, MAIN.format('login.html'), {'form': form})
 
 
+@login_required
 def home_view(request):
     """Vista que retorna el inicio."""
 
@@ -61,7 +65,7 @@ def home_view(request):
 def logout_view(request):
     """Vista para el logout."""
     logout(request)
-    return redirect('main:login_view')
+    return redirect('main:login')
 
 
 class SobreCreate(CustomMixinView, CreateView):

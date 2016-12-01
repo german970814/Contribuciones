@@ -1,8 +1,11 @@
 # Django imports
 from django import forms
-from django.contrib import messajes
-from django.utils.translation import ugetext_lazy as _
+from django.contrib import messages
+from django.utils.translation import ugettext_lazy as _
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 
+# Locale imports
 from . import constants
 
 
@@ -15,7 +18,8 @@ class CustomModelForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         for field in self.fields:
             self.fields[field].widget.attrs.update({
-                'class': constants.INPUT_CLASS
+                'class': constants.INPUT_CLASS,
+                'placeholder': self.fields[field].label
             })
 
 
@@ -28,11 +32,16 @@ class CustomForm(forms.Form):
         super().__init__(*args, **kwargs)
         for field in self.fields:
             self.fields[field].widget.attrs.update({
-                'class': constants.INPUT_CLASS
+                'class': constants.INPUT_CLASS,
+                'placeholder': self.fields[field].label
             })
 
 class CustomMixinView(object):
     """Mixin para las vistas basadas en clases"""
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
         messages.success(

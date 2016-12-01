@@ -1,6 +1,6 @@
 # Django imports
 from django.db import models
-from django.utils.translation import ugetext_lazy as _
+from django.utils.translation import ugettext_lazy as _
 
 
 class TipoIngreso(models.Model):
@@ -65,10 +65,11 @@ class Sobre(models.Model):
 
     fecha = models.DateField(_('fecha'))
     diligenciado = models.BooleanField(verbose_name=_('sobre diligenciado'), default=True)
-    tipo_ingreso = models.ForeignKey(TipoIngreso, verbose_name=_('tipo ingreso'))
+    tipo_ingreso = models.ForeignKey(TipoIngreso, verbose_name=_('tipo ingreso'), related_name='sobres')
     valor = models.BigIntegerField(verbose_name=_('valor'))
     forma_pago = models.CharField(max_length=2, verbose_name=_('forma de pago'), choices=FORMAS_PAGO)
-    persona = models.ForeignKey(Persona, verbose_name='persona', blank=True, null=True)
+    persona = models.ForeignKey(Persona, verbose_name='persona', blank=True, null=True, related_name='sobres')
+    observaciones = models.ForeignKey(Observacion, verbose_name='observaciones', blank=True, null=True)
 
     class Meta:
         verbose_name = _('Sobre')
