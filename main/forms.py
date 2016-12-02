@@ -64,7 +64,11 @@ class FormularioCrearSobre(CustomModelForm):
 
     def __init__(self, *args, **kwargs):
         self.persona_cache = None
+        self.persona = kwargs.pop('persona', None)
         super().__init__(*args, **kwargs)
+        if self.persona is not None:
+            self.initial.update(self.persona.to_json())
+            self.initial['hidden'] = self.persona.id.__str__()
         self.formulario_crear_persona_class = FormularioCrearPersona
         for name, field in self.formulario_crear_persona_class().fields.items():
             self.fields[name] = field

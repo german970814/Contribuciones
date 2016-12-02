@@ -2,6 +2,7 @@
 from django import forms
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.urlresolvers import reverse_lazy
 from django.db import models
 from django.forms.utils import ErrorList
 from django.utils.translation import ugettext_lazy as _
@@ -34,7 +35,7 @@ class CustomModel(object):
         for field in fields:
             if field not in self.__dir__():
                 return ValueError('Field "%s" not found in "%s"' % (field, self.__class__.__name__))
-            JSON[field] = getattr(self, field)
+            JSON[field] = getattr(self, field).__str__().upper()
         return JSON
 
 class CustomErrorList(ErrorList):
@@ -114,3 +115,8 @@ class CustomMixinView(object):
             _(constants.ERROR_FORM)
         )
         return super().form_invalid(form)
+
+    def get_success_url(self):
+        if getattr(self, 'object', None) is not None:
+            return reverse_lazy(self.success_url, args=(self.object.id, ))
+        return super().get_success_url()

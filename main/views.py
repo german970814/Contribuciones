@@ -83,9 +83,6 @@ class SobreCreate(CustomMixinView, CreateView):
     def form_valid(self, form):
         response = super().form_valid(form)
         if form.get_persona() is not None:
-            # nueva_persona = Persona.objects.create(**form.cleaned_data)
-            # self.object = form.save()
-            # self.object.persona = nueva_persona
             persona = form.get_persona()
             self.object.persona = persona
             self.object.save()
@@ -97,8 +94,14 @@ class SobreUpdate(CustomMixinView, UpdateView):
 
     model = Sobre
     form_class = FormularioCrearSobre
-    success_url = reverse_lazy('main:editar_sobre')
+    success_url = 'main:editar_sobre'
     template_name = MAIN.format('crear_sobre.html')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        if self.object.persona is not None:
+            kwargs.update({'persona': self.object.persona})
+        return kwargs
 
 
 class PersonaCreate(CustomMixinView, CreateView):
@@ -115,7 +118,7 @@ class PersonaUpdate(CustomMixinView, UpdateView):
 
     model = Persona
     form_class = FormularioCrearPersona
-    success_url = reverse_lazy('main:editar_persona')
+    success_url = 'main:editar_persona'
     template_name = MAIN.format('crear_persona.html')
 
 
@@ -133,7 +136,7 @@ class TipoIngresoUpdate(CustomMixinView, UpdateView):
 
     model = TipoIngreso
     form_class = FormularioCrearTipoIngreso
-    success_url = reverse_lazy('main:editar_tipo_ingreso')
+    success_url = 'main:editar_tipo_ingreso'
     template_name = MAIN.format('crear_tipo_ingreso.html')
 
 
@@ -151,5 +154,5 @@ class ObservacionUpdate(CustomMixinView, UpdateView):
 
     model = Observacion
     form_class = FormularioCrearObservacion
-    success_url = reverse_lazy('main:editar_observacion')
+    success_url = 'main:editar_observacion'
     template_name = MAIN.format('crear_observacion.html')
