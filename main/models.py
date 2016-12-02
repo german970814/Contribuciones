@@ -2,8 +2,11 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
+# Locale Imports
+from .mixins import CustomModel
 
-class TipoIngreso(models.Model):
+
+class TipoIngreso(CustomModel, models.Model):
     """Modelo para guardar el tipo de ingreso que se da en en los sobres."""
 
     nombre = models.CharField(max_length=255, verbose_name=_('nombre'))
@@ -16,13 +19,13 @@ class TipoIngreso(models.Model):
         return self.nombre.upper()
 
 
-class Persona(models.Model):
+class Persona(CustomModel, models.Model):
     """Modelo de personas, guarda la informacion de una persona para un sobre."""
 
     nombre = models.CharField(verbose_name=_('nombre'), max_length=255)
     primer_apellido = models.CharField(verbose_name=_('primer apellido'), max_length=255)
     segundo_apellido = models.CharField(verbose_name=_('segundo apellido'), max_length=255, blank=True)
-    cedula = models.BigIntegerField(verbose_name=_('no. identificación'), unique=True)
+    cedula = models.BigIntegerField(verbose_name=_('Identificación'), unique=True)
     telefono = models.BigIntegerField(verbose_name=_('teléfono'), blank=True, null=True)
 
     class Meta:
@@ -36,8 +39,18 @@ class Persona(models.Model):
             self.cedula
         )
 
+    def to_json(self, *args, **kwargs):
+        if not args:
+            fields = []
+            for field in self._meta.fields:
+                if not field.is_relation:
+                    fields.append(field.name)
+        else:
+            fields = args
+        return super().to_json(*fields, **kwargs)
 
-class Observacion(models.Model):
+
+class Observacion(CustomModel, models.Model):
     """Modelo para guardar las observaciones que se pueden hacer en un sobre"""
 
     texto = models.TextField(verbose_name=_('observacion'))
@@ -47,10 +60,10 @@ class Observacion(models.Model):
         verbose_name_plural = _('Observaciones')
 
     def __str__(self):
-        return 'Observacion No.{}'.format(self.id)
+        return self.texto.upper()
 
 
-class Sobre(models.Model):
+class Sobre(CustomModel, models.Model):
     """Modelo para la creacion de sobres en el sistema de digitacion de sobres."""
 
     EFECTIVO = 'EF'

@@ -76,6 +76,21 @@ class SobreCreate(CustomMixinView, CreateView):
     success_url = reverse_lazy('main:crear_sobre')
     template_name = MAIN.format('crear_sobre.html')
 
+    def render_to_response(self, context, **response_kwargs):
+        context['personas'] = Persona.objects.all()
+        return super().render_to_response(context, **response_kwargs)
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        if form.get_persona() is not None:
+            # nueva_persona = Persona.objects.create(**form.cleaned_data)
+            # self.object = form.save()
+            # self.object.persona = nueva_persona
+            persona = form.get_persona()
+            self.object.persona = persona
+            self.object.save()
+        return response
+
 
 class SobreUpdate(CustomMixinView, UpdateView):
     """Clase para actualizar sobres."""

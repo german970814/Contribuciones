@@ -20,8 +20,18 @@
       <!-- bootstrap-progressbar -->
       <link href="{% static 'vendors/bootstrap-progressbar/css/bootstrap-progressbar-3.3.4.min.css' %}" rel="stylesheet">
 
+      <!-- bootstrap datetimepicker-->
+      <link href="{% static 'datetimepicker/css/bootstrap-datetimepicker.min.css' %}" rel="stylesheet">
+
       <!-- Custom Theme Style -->
       <link href="{% static 'build/css/custom.min.css' %}" rel="stylesheet">
+
+      <!-- PNonitify-->
+      <link href="{% static 'vendors/pnotify/dist/pnotify.css' %}" rel="stylesheet">
+      <link href="{% static 'vendors/pnotify/dist/pnotify.buttons.css' %}" rel="stylesheet">
+      <link href="{% static 'vendors/pnotify/dist/pnotify.nonblock.css' %}" rel="stylesheet">
+
+      <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 
       {% block css %}
       {% endblock css %}
@@ -186,17 +196,29 @@
       <script src="{% static 'vendors/Flot/jquery.flot.time.js' %}"></script>
       <script src="{% static 'vendors/Flot/jquery.flot.stack.js' %}"></script>
       <script src="{% static 'vendors/Flot/jquery.flot.resize.js' %}"></script>
+
+      <!-- DatetimePicker Bootstrap-->
+      <script src="{% static 'js/moment.js' %}"></script>
+      <script src="{% static 'datetimepicker/js/bootstrap-datetimepicker.min.js' %}"></script>
+
       <!-- Flot plugins -->
       <script src="{% static 'js/flot/jquery.flot.orderBars.js' %}"></script>
       <script src="{% static 'js/flot/date.js' %}"></script>
       <script src="{% static 'js/flot/jquery.flot.spline.js' %}"></script>
       <script src="{% static 'js/flot/curvedLines.js' %}"></script>
       <!-- bootstrap-daterangepicker -->
-      <script src="{% static 'js/moment/moment.min.js' %}"></script>
       <script src="{% static 'js/datepicker/daterangepicker.js' %}"></script>
+
+      <!-- PNotify -->
+      <script src="{% static 'vendors/pnotify/dist/pnotify.js' %}"></script>
+      <script src="{% static 'vendors/pnotify/dist/pnotify.buttons.js' %}"></script>
+      <script src="{% static 'vendors/pnotify/dist/pnotify.nonblock.js' %}"></script>
 
       <!-- Custom Theme Scripts -->
       <script src="{% static 'build/js/custom.min.js' %}"></script>
+
+      <!--Custom Scripts-->
+      <script type="text/javascript" src="{% static 'js/functions.js' %}"></script>
 
     <!-- Skycons -->
     <script>
@@ -220,79 +242,22 @@
     <!-- /Skycons -->
 
     <!-- bootstrap-daterangepicker -->
+    {% if messages %}
     <script>
       $(document).ready(function() {
-
-        var cb = function(start, end, label) {
-          console.log(start.toISOString(), end.toISOString(), label);
-          $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
-        };
-
-        var optionSet1 = {
-          startDate: moment().subtract(29, 'days'),
-          endDate: moment(),
-          minDate: '01/01/2012',
-          maxDate: '12/31/2015',
-          dateLimit: {
-            days: 60
-          },
-          showDropdowns: true,
-          showWeekNumbers: true,
-          timePicker: false,
-          timePickerIncrement: 1,
-          timePicker12Hour: true,
-          ranges: {
-            'Today': [moment(), moment()],
-            'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-            'Last 7 Days': [moment().subtract(6, 'days'), moment()],
-            'Last 30 Days': [moment().subtract(29, 'days'), moment()],
-            'This Month': [moment().startOf('month'), moment().endOf('month')],
-            'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
-          },
-          opens: 'left',
-          buttonClasses: ['btn btn-default'],
-          applyClass: 'btn-small btn-primary',
-          cancelClass: 'btn-small',
-          format: 'MM/DD/YYYY',
-          separator: ' to ',
-          locale: {
-            applyLabel: 'Submit',
-            cancelLabel: 'Clear',
-            fromLabel: 'From',
-            toLabel: 'To',
-            customRangeLabel: 'Custom',
-            daysOfWeek: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'],
-            monthNames: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-            firstDay: 1
-          }
-        };
-        $('#reportrange span').html(moment().subtract(29, 'days').format('MMMM D, YYYY') + ' - ' + moment().format('MMMM D, YYYY'));
-        $('#reportrange').daterangepicker(optionSet1, cb);
-        $('#reportrange').on('show.daterangepicker', function() {
-          console.log("show event fired");
-        });
-        $('#reportrange').on('hide.daterangepicker', function() {
-          console.log("hide event fired");
-        });
-        $('#reportrange').on('apply.daterangepicker', function(ev, picker) {
-          console.log("apply event fired, start/end dates are " + picker.startDate.format('MMMM D, YYYY') + " to " + picker.endDate.format('MMMM D, YYYY'));
-        });
-        $('#reportrange').on('cancel.daterangepicker', function(ev, picker) {
-          console.log("cancel event fired");
-        });
-        $('#options1').click(function() {
-          $('#reportrange').data('daterangepicker').setOptions(optionSet1, cb);
-        });
-        $('#options2').click(function() {
-          $('#reportrange').data('daterangepicker').setOptions(optionSet2, cb);
-        });
-        $('#destroy').click(function() {
-          $('#reportrange').data('daterangepicker').remove();
-        });
+          {% for message in messages %}
+              new PNotify({
+                  title: {% if message.tags == "success" %}'En hora buena!'{% elif message.tags == 'error' %}'Error'{% else %}'Informacion'{% endif %},
+                  text: '{{ message }}',
+                  type: {% if message.tags == "success" %}'success'{% elif message.tags == 'error' %}'error'{% else %}'info'{% endif %},
+                  styling: 'bootstrap3'
+              });
+          {% endfor %}
       });
     </script>
-    <!-- /bootstrap-daterangepicker -->
+    {% endif %}
 
-    <!-- /gauge.js -->
+    {% block js %}
+    {% endblock %}
   </body>
 </html>

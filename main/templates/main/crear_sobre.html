@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load staticfiles %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 col-xs-12">
+        <div class="x_panel">
+            <div class="x_title">
+                <h2>{% trans "Formulario de Sobres" %} <small>{% trans "Agrega la información de un sobre" %}</small></h2>
+                <ul class="nav navbar-right panel_toolbox">
+                    <li>
+                        <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                        <ul class="dropdown-menu" role="menu">
+                            <li>
+                                <a href="#">Settings 1</a>
+                            </li>
+                            <li>
+                                <a href="#">Settings 2</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a class="close-link"><i class="fa fa-close"></i></a>
+                    </li>
+                </ul>
+                <div class="clearfix"></div>
+            </div>
+            <div class="x_content">
+                <br />
+                <form id="formulario" class="form-horizontal form-label-left input_mask" method='POST' enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{ form.hidden }}
+                    <div class="row">
+                        <div class="col-md-4 col-sm-4 col-xs-12 form-group has-feedback">
+                            <div class="form-group">
+                                <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ form.fecha.label }}</label>
+                                <div class="col-md-9 col-sm-9 col-xs-12 form-group has-feedback">
+                                    {{ form.fecha }}
+                                    <span class="fa fa-calendar form-control-feedback left" aria-hidden="true"></span>
+                                    <ul class="parsley-errors-list filled">
+                                        {{ form.fecha.errors }}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label class="control-label col-md-6">{{ form.diligenciado.label }}</label>
+                                <div class="col-md-6">
+                                    <div id="{{ form.diligenciado.id_for_label }}" class="btn-group" data-toggle="buttons">
+                                        {% for option in form.diligenciado %}
+                                          <label class="btn {% if forloop.first %}btn-default{% else %}btn-primary{% endif %}" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default">
+                                              {{ option.tag }}
+                                              {{ option.choice_label }}
+                                          </label>
+                                          <ul class="parsley-errors-list filled">
+                                              {{ form.diligenciado.errors }}
+                                          </ul>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-5 col-sm-5 col-xs-12 form-group has-feedback">
+                            <div class="form-group">
+                                <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ form.observaciones.label }}</label>
+                                <div class="col-md-9 col-sm-9 col-xs-12 form-group">
+                                    {{ form.observaciones }}
+                                    <ul class="parsley-errors-list filled">
+                                        {{ form.observaciones.errors }}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 col-sm-4 col-xs-12 form-group has-feedback">
+                            <div class="form-group">
+                                <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ form.tipo_ingreso.label }}</label>
+                                <div class="col-md-9 col-sm-9 col-xs-12 form-group">
+                                    {{ form.tipo_ingreso }}
+                                    <ul class="parsley-errors-list filled">
+                                        {{ form.tipo_ingreso.errors }}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 col-sm-4 col-xs-12 form-group has-feedback">
+                            <div class="form-group">
+                                <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ form.valor.label }}</label>
+                                <div class="col-md-9 col-sm-9 col-xs-12 form-group has-feedback">
+                                    {{ form.valor }}
+                                    <span class="fa fa-money form-control-feedback right" aria-hidden="true"></span>
+                                    <ul class="parsley-errors-list filled">
+                                        {{ form.valor.errors }}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 col-sm-4 col-xs-12 form-group has-feedback">
+                            <div class="form-group">
+                                <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ form.forma_pago.label }}</label>
+                                <div class="col-md-9 col-sm-9 col-xs-12 form-group">
+                                    {{ form.forma_pago }}
+                                    <ul class="parsley-errors-list filled">
+                                        {{ form.forma_pago.errors }}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 col-sm-4 col-xs-12 form-group has-feedback">
+                            <div class="form-group">
+                                <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ form.nombre.label }}</label>
+                                <div class="col-md-9 col-sm-9 col-xs-12 form-group has-feedback">
+                                    {{ form.nombre }}
+                                    <span class="fa fa-user form-control-feedback right" aria-hidden="true"></span>
+                                    <ul class="parsley-errors-list filled">
+                                        {{ form.nombre.errors }}
+                                    </ul>
+                                    <div id="autocomplete-container" style="position: relative; float: left; width: 400px; margin: 10px;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 col-sm-4 col-xs-12 form-group has-feedback">
+                            <div class="form-group">
+                                <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ form.primer_apellido.label }}</label>
+                                <div class="col-md-9 col-sm-9 col-xs-12 form-group">
+                                    {{ form.primer_apellido }}
+                                    <span class="fa fa-user form-control-feedback right" aria-hidden="true"></span>
+                                    <ul class="parsley-errors-list filled">
+                                        {{ form.primer_apellido.errors }}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 col-sm-4 col-xs-12 form-group has-feedback">
+                            <div class="form-group">
+                                <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ form.segundo_apellido.label }}</label>
+                                <div class="col-md-9 col-sm-9 col-xs-12 form-group has-feedback">
+                                    {{ form.segundo_apellido }}
+                                    <span class="fa fa-user form-control-feedback right" aria-hidden="true"></span>
+                                    <ul class="parsley-errors-list filled">
+                                        {{ form.segundo_apellido.errors }}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 col-sm-4 col-xs-12 form-group has-feedback">
+                            <div class="form-group">
+                                <label class="control-label col-md-3 col-sm-3 col-xs-12" style="right: 2%;">{{ form.cedula.label }}</label>
+                                <div class="col-md-9 col-sm-9 col-xs-12 form-group has-feedback">
+                                    {{ form.cedula }}
+                                    <span class="fa fa-credit-card form-control-feedback right" aria-hidden="true"></span>
+                                    <ul class="parsley-errors-list filled">
+                                        {{ form.cedula.errors }}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 col-sm-4 col-xs-12 form-group has-feedback">
+                            <div class="form-group">
+                                <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ form.telefono.label }}</label>
+                                <div class="col-md-9 col-sm-9 col-xs-12 form-group has-feedback">
+                                    {{ form.telefono }}
+                                    <span class="fa fa-phone form-control-feedback right" aria-hidden="true"></span>
+                                    <ul class="parsley-errors-list filled">
+                                        {{ form.telefono.errors }}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="form-group"></div>
+                    <div class="ln_solid"></div>
+
+                    <div class="form-group">
+                        <div class="col-md-4 col-md-offset-5">
+                            <button type="submit" class="btn btn-primary">{% trans "Cancel" %}</button>
+                            <button type="submit" class="btn btn-success">{% trans "Submit" %}</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="{% static 'vendors/devbridge-autocomplete/dist/jquery.autocomplete.min.js' %}"></script>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('#{{ form.fecha.id_for_label }}')
+            .addClass('has-feedback-left datetimepicker')
+            .datetimepicker({
+                format: 'DD/MM/YYYY',
+                maxDate: moment(),
+            });
+
+        var $hidden = $('#{{ form.hidden.id_for_label }}');
+        var $nombre = $('#{{ form.nombre.id_for_label }}');
+        var $form = $('#formulario');
+
+        {% if form.errors %}
+        if ($hidden.val() != '' && $hidden.val() != undefined && $nombre.val() != '') {
+            $('#{{ form.primer_apellido.id_for_label }}, #{{ form.segundo_apellido.id_for_label }}, #{{ form.cedula.id_for_label }}, #{{ form.telefono.id_for_label }}')
+                .attr('readonly', true);
+        }
+        {% endif %}
+
+        var personas = {};
+
+        {% for persona in personas %}
+        personas["{{ persona.id }}"] = "{{ persona }}";
+        {% endfor %}
+
+        var personas_array = $.map(personas, function(value, key) {
+            return {
+                value: value,
+                data: key
+            }
+        })
+
+        // initialize autocomplete with custom appendTo
+        $nombre.autocomplete({
+            lookup: personas_array,
+            appendTo: '#autocomplete-container',
+            onSelect: function(suggestion) {
+                let $id = suggestion['data'];
+                $.ajax({
+                    type: 'GET',
+                    url: '{% url "main:api>get_persona" 0 %}'.replace('0', $id),
+                    data: {
+                        csrfmiddlewaretoken: $CSRF.val()
+                    },
+                    success: function (data) {
+                        if (data['response_code'] == 200) {
+                            let obj = data['persona']
+                            for (field in obj) {
+                                if (field == 'id') {
+                                    $('input[name="hidden"]').val(obj[field].toString());
+                                    continue;
+                                }
+                                try {
+                                    $('input[name="' + field.toString() + '"]').val(obj[field].toString().toUpperCase()).attr('readonly', true);
+                                } catch (err) {
+
+                                }
+                            }
+                            if ($nombre.attr('readonly')) {
+                                $nombre.attr('readonly', false);
+                            }
+                        }
+                    }
+                })
+            }
+        });
+
+        $form.submit(function (event) {
+            if ($nombre.val() == '') {
+                $hidden.val('');
+            }
+            return true;
+        });
+
+        $nombre.on('keydown paste', function (event) {
+            if ($(this).val() != '') {
+                $hidden.val('');
+                $('#{{ form.primer_apellido.id_for_label }}, #{{ form.segundo_apellido.id_for_label }}, #{{ form.cedula.id_for_label }}, #{{ form.telefono.id_for_label }}')
+                    .val('')
+                    .attr('readonly', false);
+            }
+        });
+    })
+</script>
+{% endblock %}
