@@ -111,6 +111,28 @@ class CustomForm(FormMixin, forms.Form):
     pass
 
 
+class FechasRangoFormMixin(CustomForm):
+    """Clase de base para trabajar un formulario con fecha inicial y fecha final."""
+
+    fecha_inicial = forms.DateField(label=_('Fecha Inicial'))
+    fecha_final = forms.DateField(label=_('Fecha Final'))
+
+    def clean(self, *args, **kwargs):
+        cleaned_data = super().clean(*args, **kwargs)
+
+        fecha_inicial = cleaned_data.get('fecha_inicial', None)
+        fecha_final = cleaned_data.get('fecha_final', None)
+
+        if fecha_final is not None and fecha_inicial is not None:
+            # se valida el campo
+            if fecha_inicial > fecha_final:
+                self.add_error(
+                    'fecha_inicial', _('Fecha inicial no puede ser mayor que la Fecha final')
+                )
+
+        return cleaned_data
+
+
 class CustomMixinView(object):
     """Mixin para las vistas basadas en clases"""
 

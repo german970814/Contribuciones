@@ -27,3 +27,20 @@ if (!Array.prototype.contains) {
         return false;
     };
 }
+
+$(document).ready(function () {
+    $('#id_fecha_inicial, #id_fecha_final')
+        .addClass('datetimepicker')
+        .datetimepicker({
+            format: 'DD/MM/YYYY',
+            maxDate: moment(),
+        });
+
+    $('#id_fecha_inicial').on("dp.change",function(e){
+        $('#id_fecha_final').data("DateTimePicker").minDate(e.date);
+    });
+
+    $('#id_fecha_final').on("dp.change",function(e){
+        $('#id_fecha_inicial').data("DateTimePicker").maxDate(e.date);
+    });
+});

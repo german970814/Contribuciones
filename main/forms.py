@@ -5,7 +5,7 @@ from django.utils.translation import ugettext_lazy as _
 
 # Locale imports
 from .models import Sobre, Persona, TipoIngreso, Observacion
-from .mixins import CustomForm, CustomModelForm
+from .mixins import CustomForm, CustomModelForm, FechasRangoFormMixin
 from . import constants
 
 
@@ -71,7 +71,7 @@ class FormularioCrearSobre(CustomModelForm):
         )  # se definen los campos iniciales del formulario
 
     def __init__(self, *args, **kwargs):
-        self.persona_cache = None  # crea la persona en chaché
+        self.persona_cache = None  # crea la persona en caché
         self.persona = kwargs.pop('persona', None)  # intenta obtener una persona de las kwargs
         # asigna la clase del formulario de persona
         self.formulario_crear_persona_class = FormularioCrearPersona
@@ -176,3 +176,29 @@ class FormularioCrearObservacion(CustomModelForm):
         fields = (
             'texto',
         )
+
+
+class FormularioReporteContribuciones(FechasRangoFormMixin):
+    """Formulario para el reporte de contribuciones."""
+
+    totalizado = forms.BooleanField(label=_('Toda la congregacion'), required=False)
+    persona = forms.ModelChoiceField(
+        queryset=Persona.objects.all(), label=_('Persona'), required=False
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['totalizado'].widget.attrs.update({
+            'class': 'flat'
+        })
+
+    def clean(self, *args, **kwargs):
+        cleaned_data = super().clean(*args, **kwargs)
+
+        persona = cleaned_data.get('persona', None)
+        totalizado = cleaned_data.get('totalizado', False)
+
+        if persona is None and totalizado is False:
+            self.add_error(
+                'persona', _('Debe escoger una persona, o marcar la casilla de totalizado')
+            )

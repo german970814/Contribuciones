@@ -1,21 +1,28 @@
 # Django imports
-from django.shortcuts import render, redirect
-from django.contrib.auth import login, logout
 from django.contrib import messages
-from django.utils.translation import ugettext as _
+from django.contrib.auth import login, logout
+from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse, reverse_lazy
+from django.db.models import Sum
+from django.shortcuts import render, redirect
+from django.utils.translation import ugettext as _
 from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic import ListView
-from django.contrib.auth.decorators import login_required
 
 # Locale imports
 from .constants import MAIN, ERROR_FORM
-from .models import Sobre, Persona, Observacion, TipoIngreso
+from .decorators import group_required
 from .mixins import CustomMixinView
+from .models import Sobre, Persona, Observacion, TipoIngreso
 from .forms import (
     FormularioLogearUsuario, FormularioCrearSobre, FormularioCrearPersona,
-    FormularioCrearTipoIngreso, FormularioCrearObservacion
+    FormularioCrearTipoIngreso, FormularioCrearObservacion,
+    FormularioReporteContribuciones
 )
+
+# Python imports
+from collections import OrderedDict
+import datetime
 
 
 def login_view(request):
@@ -65,6 +72,74 @@ def logout_view(request):
     """Vista para el logout."""
     logout(request)  # deslogea de la sesion
     return redirect('main:login')  # redirecciona al login
+
+
+@group_required('consultas')
+def reporte_contribuciones(request):
+    """Reporte de personas totalizada por contribuciones"""
+
+    data = {}
+
+    if request.method == 'POST':
+        form = FormularioReporteContribuciones(data=request.POST)
+
+        if form.is_valid():
+            totalizado = form.cleaned_data.get('totalizado')
+            fecha_inicial = form.cleaned_data.get('fecha_inicial')
+            fecha_final = form.cleaned_data.get('fecha_final') + datetime.timedelta(days=1)
+
+            queryset_kwargs = {
+                'fecha__range': (fecha_inicial, fecha_final)
+            }
+
+            if not totalizado:
+                persona = form.cleaned_data.get('persona')
+                queryset_kwargs['persona'] = persona
+
+            tabla = OrderedDict({'TOTAL': {}})
+            total_global = 0
+            for tipo in TipoIngreso.objects.all():
+                total = 0
+                _totales = {'total': 0}
+
+                sobres = tipo.sobres.filter(**queryset_kwargs)
+
+                for forma in Sobre.FORMAS_PAGO:
+                    _sobres = sobres.filter(forma_pago=forma[0])  # es una tupla
+                    totales = _sobres.aggregate(
+                        **{forma[1]: Sum('valor')}
+                    )
+
+                    totales[forma[1]] = totales[forma[1]] or 0
+                    _totales['total'] += totales[forma[1]]
+                    _totales.update(totales)
+
+                    if forma[1] in tabla['TOTAL']:
+                        tabla['TOTAL'][forma[1]] += totales[forma[1]]
+                    else:
+                        tabla['TOTAL'][forma[1]] = totales[forma[1]]
+
+                total_global += _totales['total']
+
+                tabla.update({str(tipo): _totales})
+            tabla['TOTAL']['total'] = total_global
+            data['tabla'] = OrderedDict(reversed(list(tabla.items())))
+            messages.success(
+                request,
+                _(ERROR_FORM)
+            )
+
+        else:
+            messages.error(
+                request,
+                _(ERROR_FORM)
+            )
+    else:
+        form = FormularioReporteContribuciones()
+
+    data['form'] = form
+
+    return render(request, MAIN.format('reporte_contribuciones.html'), data)
 
 
 class SobreCreate(CustomMixinView, CreateView):

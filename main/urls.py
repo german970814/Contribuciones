@@ -6,7 +6,7 @@ from .views import (
     login_view, logout_view, home_view, SobreCreate, SobreUpdate,
     PersonaCreate, PersonaUpdate, TipoIngresoCreate, TipoIngresoUpdate,
     ObservacionCreate, ObservacionUpdate, SobreList, PersonaList,
-    TipoIngresoList, ObservacionList
+    TipoIngresoList, ObservacionList, reporte_contribuciones
 )
 from .api import get_persona_api
 
@@ -26,6 +26,7 @@ urlpatterns = [
     url(r'^observacion/crear/$', ObservacionCreate.as_view(), name='crear_observacion'),
     url(r'^observacion/editar/(?P<pk>\d+)/$', ObservacionUpdate.as_view(), name='editar_observacion'),
     url(r'^observacion/lista/$', ObservacionList.as_view(), name='listar_observaciones'),
+    url(r'^reportes/contribuciones/$', reporte_contribuciones, name='reporte_contribuciones'),
     # API
     url(r'^api/v1\.1/persona/(?P<id_persona>\d+)/$', get_persona_api, name='api>get_persona'),
 ]
