@@ -24,7 +24,7 @@ def login_view(request):
     # primero verifica si existe un usuario
     if request.user.is_authenticated():
         # de ser asi, lo redirecciona a /home/
-        return redirect('home')
+        return redirect('main:home')
 
     # busca la pagina siguiente en caso de que sea por redireccion
     next_page = request.GET.get('next', None)
@@ -58,14 +58,13 @@ def login_view(request):
 @login_required
 def home_view(request):
     """Vista que retorna el inicio."""
-
-    return render(request, MAIN.format('home.html'), {})
+    return render(request, MAIN.format('home.html'), {})  # retorna al home
 
 
 def logout_view(request):
     """Vista para el logout."""
-    logout(request)
-    return redirect('main:login')
+    logout(request)  # deslogea de la sesion
+    return redirect('main:login')  # redirecciona al login
 
 
 class SobreCreate(CustomMixinView, CreateView):
@@ -75,18 +74,11 @@ class SobreCreate(CustomMixinView, CreateView):
     form_class = FormularioCrearSobre
     success_url = reverse_lazy('main:crear_sobre')
     template_name = MAIN.format('crear_sobre.html')
+    group_required = ('administrador', 'digitador', )
 
     def render_to_response(self, context, **response_kwargs):
-        context['personas'] = Persona.objects.all()
+        context['personas'] = Persona.objects.all()  # agrega el queryset de personas
         return super().render_to_response(context, **response_kwargs)
-
-    def form_valid(self, form):
-        response = super().form_valid(form)
-        if form.get_persona() is not None:
-            persona = form.get_persona()
-            self.object.persona = persona
-            self.object.save()
-        return response
 
 
 class SobreUpdate(CustomMixinView, UpdateView):
@@ -96,12 +88,25 @@ class SobreUpdate(CustomMixinView, UpdateView):
     form_class = FormularioCrearSobre
     success_url = 'main:editar_sobre'
     template_name = MAIN.format('crear_sobre.html')
+    group_required = ('administrador', )
+
+    def render_to_response(self, context, **response_kwargs):
+        context['personas'] = Persona.objects.all()  # agrega el queryset de personas
+        return super().render_to_response(context, **response_kwargs)
 
     def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
+        kwargs = super().get_form_kwargs()  # obtiene las llaves/valor de el formulario
         if self.object.persona is not None:
-            kwargs.update({'persona': self.object.persona})
-        return kwargs
+            kwargs.update({'persona': self.object.persona})  # agrega una persona
+        return kwargs  # retorna el diccionario
+
+
+class SobreList(CustomMixinView, ListView):
+    """Vista para listar los sobres ingresados."""
+
+    model = Sobre
+    template_name = MAIN.format('listar_sobres.html')
+    group_required = ('administrador', )
 
 
 class PersonaCreate(CustomMixinView, CreateView):
@@ -111,6 +116,7 @@ class PersonaCreate(CustomMixinView, CreateView):
     form_class = FormularioCrearPersona
     success_url = reverse_lazy('main:crear_persona')
     template_name = MAIN.format('crear_persona.html')
+    group_required = ('administrador', )
 
 
 class PersonaUpdate(CustomMixinView, UpdateView):
@@ -120,6 +126,15 @@ class PersonaUpdate(CustomMixinView, UpdateView):
     form_class = FormularioCrearPersona
     success_url = 'main:editar_persona'
     template_name = MAIN.format('crear_persona.html')
+    group_required = ('administrador', )
+
+
+class PersonaList(CustomMixinView, ListView):
+    """Vista para listar las personas ingresadas."""
+
+    model = Persona
+    template_name = MAIN.format('listar_personas.html')
+    group_required = ('administrador', )
 
 
 class TipoIngresoCreate(CustomMixinView, CreateView):
@@ -129,6 +144,7 @@ class TipoIngresoCreate(CustomMixinView, CreateView):
     form_class = FormularioCrearTipoIngreso
     success_url = reverse_lazy('main:crear_tipo_ingreso')
     template_name = MAIN.format('crear_tipo_ingreso.html')
+    group_required = ('administrador', )
 
 
 class TipoIngresoUpdate(CustomMixinView, UpdateView):
@@ -138,6 +154,15 @@ class TipoIngresoUpdate(CustomMixinView, UpdateView):
     form_class = FormularioCrearTipoIngreso
     success_url = 'main:editar_tipo_ingreso'
     template_name = MAIN.format('crear_tipo_ingreso.html')
+    group_required = ('administrador', )
+
+
+class TipoIngresoList(CustomMixinView, ListView):
+    """Vista para listar los tipos de ingreso ingresados."""
+
+    model = TipoIngreso
+    template_name = MAIN.format('listar_tipo_ingresos.html')
+    group_required = ('administrador', )
 
 
 class ObservacionCreate(CustomMixinView, CreateView):
@@ -147,6 +172,7 @@ class ObservacionCreate(CustomMixinView, CreateView):
     form_class = FormularioCrearObservacion
     success_url = reverse_lazy('main:crear_observacion')
     template_name = MAIN.format('crear_observacion.html')
+    group_required = ('administrador', )
 
 
 class ObservacionUpdate(CustomMixinView, UpdateView):
@@ -156,3 +182,12 @@ class ObservacionUpdate(CustomMixinView, UpdateView):
     form_class = FormularioCrearObservacion
     success_url = 'main:editar_observacion'
     template_name = MAIN.format('crear_observacion.html')
+    group_required = ('administrador', )
+
+
+class ObservacionList(CustomMixinView, ListView):
+    """Vista para listar las observaciones ingresadas."""
+
+    model = Observacion
+    template_name = MAIN.format('listar_observaciones.html')
+    group_required = ('administrador', )

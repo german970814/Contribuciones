@@ -19,19 +19,25 @@ import json
 def get_persona_api(request, id_persona):
     """Retorna los datos de una persona a partir de un id."""
 
+    # crea la data con el codigo de respuesta predeterminado
     data = {RESPONSE_CODE: RESPONSE_SUCCESS}
 
     if request.method == 'GET':
         try:
+            # intenta obtener la persona, con la url
             persona = Persona.objects.get(id=id_persona)
+            # añade el json de la persona
             data['persona'] = persona.to_json()
         except Persona.DoesNotExist:
+            # retorna la respuesta de error
             data[RESPONSE_CODE] = RESPONSE_NOT_FOUND
+            # retorna un mensaje
             data['message'] = _('No se encontró la persona buscada')
 
     else:
+        # retorna las respuestas adecuadas
         data[RESPONSE_CODE] = RESPONSE_DENIED
         data['message'] = _('Peticion Incorrecta')
 
-
+    # retorna la respuesta en json
     return HttpResponse(json.dumps(data), content_type=CONTENT_TYPE)

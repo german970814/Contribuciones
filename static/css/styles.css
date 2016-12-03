@@ -3,5 +3,9 @@
 */
 
 .container {
-   overflow: hidden;
+    overflow: hidden;
+}
+
+.x_content {
+    padding: 0px 1% 6px;
 }

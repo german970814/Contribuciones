@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 col-sm-12 col-xs-12">
+        <div class="x_panel">
+            <div class="x_title">
+                <h2>{% trans "Lista Personas" %} <small>{% trans "Lista de personas con sus datos" %}</small></h2>
+                <div class="clearfix"></div>
+            </div>
+
+            <div class="x_content table-responsive">
+                <p class="text-muted font-13 m-b-30">
+                    <a href="{% url 'main:crear_persona' %}">{% trans "Agregar una persona nueva" %}</a>
+                </p>
+                <table id="datatable" class="table table-striped table-bordered dt-responsive">
+                    <thead>
+                        <tr>
+                            <th>{% trans "Nombre" %}</th>
+                            <th>{% trans "Primer Apellido" %}</th>
+                            <th>{% trans "Segundo Apellido" %}</th>
+                            <th>{% trans "Identificación" %}</th>
+                            <th>{% trans "Telefono" %}</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for persona in persona_list %}
+                        <tr>
+                            <td>{{ persona.nombre|upper }}</td>
+                            <td>{{ persona.primer_apellido|upper }}</td>
+                            <td>{{ persona.segundo_apellido|upper }}</td>
+                            <td>{{ persona.cedula }}</td>
+                            <td>{% if persona.telefono %}{{ persona.telefono }}{% endif %}</td>
+                            {% empty %}
+                            <td colspan="5">{% trans "Aun no hay personas, agrega una " %}<a href="{% url 'main:crear_persona' %}">{% trans "Aquí"%}</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block js %}
+
+{% include "main/_datatables_javascript.html" %}
+
+{% endblock %}
