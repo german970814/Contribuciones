@@ -250,3 +250,45 @@ class FormularioCrearUsuario(CustomModelForm):
         user = super().save(commit=commit, *args, **kwargs)
         user.groups.add(self.cleaned_data.get('grupo'))
         return user
+
+
+class CambiarContrasenaForm(CustomForm):
+    """Formulario para cambiar la contraseña de un usuario."""
+
+    password_1 = forms.CharField(max_length=255, label=_('Contraseña'), widget=forms.PasswordInput)
+    password_2 = forms.CharField(max_length=255, label=_('Repita Contraseña'), widget=forms.PasswordInput)
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('usuario', None)
+        super().__init__(*args, **kwargs)
+
+    def clean(self, *args, **kwargs):
+        cleaned_data = super().clean(*args, **kwargs)
+
+        password_1 = cleaned_data.get('password_1', None) or None
+        password_2 = cleaned_data.get('password_2', None) or None
+
+        if password_1 is not None and password_2 is not None:
+            if password_1 != password_2:
+                self.add_error(
+                    'password_1',
+                    _('Contraseñas no coinciden, asegurate de que las contraseñas coincidan')
+                )
+
+    def save(self, commit=True):
+        # si hay usuario
+        if self.user is not None:
+            # busca la contraseña ingresada
+            password = self.cleaned_data.get('password_1')
+            # setea la contraseña
+            self.user.set_password(password)
+            if commit:
+                # guarda el usuario
+                self.user.save()
+                # autentifica el usuario, y retorna el usuario autenticado
+                return authenticate(email=self.user.email, password=password)
+            # retorna el usuario
+            return self.user
+        else:
+            # levanta una excepcion
+            raise NotImplementedError(_('Usuario no fue proveido'))

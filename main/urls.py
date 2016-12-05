@@ -7,7 +7,7 @@ from .views import (
     PersonaCreate, PersonaUpdate, TipoIngresoCreate, TipoIngresoUpdate,
     ObservacionCreate, ObservacionUpdate, SobreList, PersonaList,
     TipoIngresoList, ObservacionList, reporte_contribuciones, listar_sobres,
-    UserCreate, UserList
+    UserCreate, UserList, SetPasswordView
 )
 from .api import get_persona_api
 
@@ -29,6 +29,7 @@ urlpatterns = [
     url(r'^observacion/lista/$', ObservacionList.as_view(), name='listar_observaciones'),
     url(r'^usuarios/crear/$', UserCreate.as_view(), name='crear_usuario'),
     url(r'^usuarios/lista/$', UserList.as_view(), name='listar_usuarios'),
+    url(r'^usuarios/change_password/$', SetPasswordView.as_view(), name='cambiar_contraseña'),
     url(r'^reportes/contribuciones/$', reporte_contribuciones, name='reporte_contribuciones'),
     # API
     url(r'^api/v1\.1/persona/(?P<id_persona>\d+)/$', get_persona_api, name='api>get_persona'),

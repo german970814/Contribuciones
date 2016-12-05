@@ -7,7 +7,7 @@ from django.db.models import Sum
 from django.shortcuts import render, redirect
 from django.utils.translation import ugettext as _
 from django.views.generic.edit import CreateView, UpdateView
-from django.views.generic import ListView
+from django.views.generic import ListView, FormView
 
 
 # Locale imports
@@ -18,7 +18,8 @@ from .models import Sobre, Persona, Observacion, TipoIngreso
 from .forms import (
     FormularioLogearUsuario, FormularioCrearSobre, FormularioCrearPersona,
     FormularioCrearTipoIngreso, FormularioCrearObservacion,
-    FormularioReporteContribuciones, FormularioCrearUsuario
+    FormularioReporteContribuciones, FormularioCrearUsuario,
+    CambiarContrasenaForm
 )
 
 # Python imports
@@ -343,3 +344,21 @@ class UserList(CustomMixinView, ListView):
 
     def get_queryset(self):
         return super().get_queryset().exclude(is_staff=True).exclude(is_superuser=True)
+
+
+class SetPasswordView(CustomMixinView, FormView):
+    """Clase para cambiar la contraseña."""
+
+    template_name = MAIN.format('cambiar_contraseña.html')
+    form_class = CambiarContrasenaForm
+    success_url = reverse_lazy('main:cambiar_contraseña')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()  # obtiene las llaves/valor de el formulario
+        kwargs.update({'usuario': self.request.user})  # agrega un usuario
+        return kwargs  # retorna el diccionario
+
+    def form_valid(self, form):
+        user = form.save()  # se obtiene el usuario del formulario
+        login(self.request, user)  # se logea el usuario
+        return super().form_valid(form)
