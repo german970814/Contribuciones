@@ -22,6 +22,7 @@
                             <th>{% trans "Segundo Apellido" %}</th>
                             <th>{% trans "Identificación" %}</th>
                             <th>{% trans "Telefono" %}</th>
+                            <td>{% trans "Comandos" %}</td>
                         </tr>
                     </thead>
 
@@ -33,8 +34,9 @@
                             <td>{{ persona.segundo_apellido|upper }}</td>
                             <td>{{ persona.cedula }}</td>
                             <td>{% if persona.telefono %}{{ persona.telefono }}{% endif %}</td>
+                            <td><a href="{% url 'main:editar_persona' persona.id %}" class="fa fa-edit btn btn-success"></a></td>
                             {% empty %}
-                            <td colspan="5">{% trans "Aun no hay personas, agrega una " %}<a href="{% url 'main:crear_persona' %}">{% trans "Aquí"%}</a></td>
+                            <td colspan="6">{% trans "Aun no hay personas, agrega una " %}<a href="{% url 'main:crear_persona' %}">{% trans "Aquí"%}</a></td>
                         </tr>
                         {% endfor %}
                     </tbody>

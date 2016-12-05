@@ -18,6 +18,7 @@
                     <thead>
                         <tr>
                             <th>{% trans "Nombre" %}</th>
+                            <th>{% trans "Comandos" %}</th>
                         </tr>
                     </thead>
 
@@ -25,8 +26,9 @@
                         {% for observacion in observacion_list %}
                         <tr>
                             <td>{{ observacion.texto|upper }}</td>
+                            <td><a href="{% url 'main:editar_observacion' observacion.id %}" class="fa fa-edit btn btn-success"></a></td>
                             {% empty %}
-                            <td colspan="1">{% trans "Aun no hay observaciones, agrega una " %}<a href="{% url 'main:crear_observacion' %}">{% trans "Aquí"%}</a></td>
+                            <td colspan="2">{% trans "Aun no hay observaciones, agrega una " %}<a href="{% url 'main:crear_observacion' %}">{% trans "Aquí"%}</a></td>
                         </tr>
                         {% endfor %}
                     </tbody>

@@ -1,5 +1,5 @@
 {% load staticfiles %}
-{% load i18n %}
+{% load i18n utils %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -31,6 +31,9 @@
       <link href="{% static 'vendors/pnotify/dist/pnotify.buttons.css' %}" rel="stylesheet">
       <link href="{% static 'vendors/pnotify/dist/pnotify.nonblock.css' %}" rel="stylesheet">
 
+      <!-- Select2 -->
+      <link href="{% static 'vendors/select2/dist/css/select2.min.css' %}" rel="stylesheet">
+
       <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 
       {% block css %}
@@ -44,7 +47,7 @@
                   <div class="left_col scroll-view">
                       <div class="navbar nav_title" style="border: 0;">
                           <a href="{% url 'main:home' %}" class="site_title">
-                              <i class="fa fa-paw"></i><span>Digitación</span>
+                              <i class="fa fa-home"></i><span>Digitación</span>
                           </a>
                       </div>
 
@@ -67,24 +70,31 @@
                           <div class="menu_section">
                               <h3>General</h3>
                               <ul class="nav side-menu">
-                                  <li><a><i class="fa fa-home"></i> {% trans "Administración" %} <span class="fa fa-chevron-down"></span></a>
+                                  {% if request.user|pertenece_grupo:"administrador" %}
+                                  <li><a><i class="fa fa-sitemap"></i> {% trans "Administración" %} <span class="fa fa-chevron-down"></span></a>
                                       <ul class="nav child_menu">
                                           <li><a href="{% url 'main:listar_sobres' %}">{% trans "Listar Sobres" %}</a></li>
                                           <li><a href="{% url 'main:listar_personas' %}">{% trans "Listar Personas" %}</a></li>
                                           <li><a href="{% url 'main:listar_tipo_ingresos' %}">{% trans "Listar Tipos de Ingreso" %}</a></li>
                                           <li><a href="{% url 'main:listar_observaciones' %}">{% trans "Listar Observaciones" %}</a></li>
+                                          <li><a href="{% url 'main:listar_usuarios' %}">{% trans "Listar Usuarios" %}</a></li>
                                       </ul>
                                   </li>
+                                  {% endif %}
+                                  {% if request.user|pertenece_grupo:"digitador,administrador" %}
                                   <li><a><i class="fa fa-edit"></i> {% trans "Sobres" %} <span class="fa fa-chevron-down"></span></a>
                                       <ul class="nav child_menu">
                                           <li><a href="{% url 'main:crear_sobre' %}">{% trans "Ingresar Sobre" %}</a></li>
                                       </ul>
                                   </li>
+                                  {% endif %}
+                                  {% if request.user|pertenece_grupo:"consultas,administrador"%}
                                   <li><a><i class="fa fa-folder-open-o"></i> {% trans "Reportes" %} <span class="fa fa-chevron-down"></span></a>
                                       <ul class="nav child_menu">
                                           <li><a href="{% url 'main:reporte_contribuciones' %}">{% trans "Reporte de Contribuciones" %}</a></li>
                                       </ul>
                                   </li>
+                                  {% endif %}
                               </ul>
                           </div>
                       </div>
@@ -159,6 +169,7 @@
       <script src="{% static 'vendors/Chart.js/dist/Chart.min.js' %}"></script>
       <!-- gauge.js -->
       <script src="{% static 'vendors/bernii/gauge.js/dist/gauge.min.js' %}"></script>
+
       <!-- bootstrap-progressbar -->
       <script src="{% static 'vendors/bootstrap-progressbar/bootstrap-progressbar.min.js' %}"></script>
       <!-- iCheck -->
@@ -188,6 +199,9 @@
       <script src="{% static 'vendors/pnotify/dist/pnotify.js' %}"></script>
       <script src="{% static 'vendors/pnotify/dist/pnotify.buttons.js' %}"></script>
       <script src="{% static 'vendors/pnotify/dist/pnotify.nonblock.js' %}"></script>
+
+      <!-- Select2 -->
+      <script src="{% static 'vendors/select2/dist/js/select2.full.min.js' %}"></script>
 
       <!-- Custom Theme Scripts -->
       <script src="{% static 'build/js/custom.min.js' %}"></script>
@@ -223,7 +237,7 @@
           {% for message in messages %}
               new PNotify({
                   title: {% if message.tags == "success" %}'En hora buena!'{% elif message.tags == 'error' %}'Error'{% else %}'Informacion'{% endif %},
-                  text: '{{ message }}',
+                  text: '{{ message|safe }}',
                   type: {% if message.tags == "success" %}'success'{% elif message.tags == 'error' %}'error'{% else %}'info'{% endif %},
                   styling: 'bootstrap3'
               });

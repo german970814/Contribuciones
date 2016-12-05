@@ -3,6 +3,52 @@
 
 {% block content %}
 <div class="row">
+    <div class="col-md-12 col-xs-12">
+        <div class="x_panel">
+            <div class="x_title">
+                <h2>{% trans "Formulario Listar Sobres" %} <small>{% trans "Filtra los sobres, de acuerdo a el rango de fecha escogido" %}</small></h2>
+                <div class="clearfix"></div>
+            </div>
+            <div class="x_content">
+                <br />
+                <form id="formulario" class="form-horizontal form-label-left input_mask" method='POST' enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-5 col-sm-5 col-xs-12 form-group has-feedback">
+                            <div class="form-group">
+                                <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ form.fecha_inicial.label }}</label>
+                                <div class="col-md-9 col-sm-9 col-xs-12 form-group has-feedback">
+                                    {{ form.fecha_inicial }}
+                                    <span class="fa fa-calendar form-control-feedback right" aria-hidden="true"></span>
+                                    <ul class="parsley-errors-list filled">
+                                        {{ form.fecha_inicial.errors }}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-5 col-sm-5 col-xs-12 form-group has-feedback">
+                            <div class="form-group">
+                                <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ form.fecha_final.label }}</label>
+                                <div class="col-md-9 col-sm-9 col-xs-12 form-group">
+                                    {{ form.fecha_final }}
+                                    <span class="fa fa-calendar form-control-feedback right" aria-hidden="true"></span>
+                                    <ul class="parsley-errors-list filled">
+                                        {{ form.fecha_final.errors }}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                  {% include 'main/_footer_form.html' %}
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
     <div class="col-md-12 col-sm-12 col-xs-12">
         <div class="x_panel">
             <div class="x_title">
@@ -24,6 +70,7 @@
                             <th>{% trans "Tipo Ingreso" %}</th>
                             <th>{% trans "Forma de Pago" %}</th>
                             <th>{% trans "Observaciones" %}</th>
+                            <th>{% trans "Comandos" %}</th>
                         </tr>
                     </thead>
 
@@ -37,8 +84,9 @@
                             <td>{{ sobre.tipo_ingreso }}</td>
                             <td>{{ sobre.get_forma_pago_display }}</td>
                             <td>{% if sobre.observaciones %}{{ sobre.observaciones }}{% else %}{% trans "NINGUNA" %}{% endif %}</td>
+                            <td><a href="{% url 'main:editar_sobre' sobre.id %}" class="fa fa-edit btn btn-success"></a></td>
                             {% empty %}
-                            <td colspan="6">{% trans "Aun no hay sobres, agrega uno " %}<a href="{% url 'main:crear_sobre' %}">{% trans "Aquí"%}</a></td>
+                            <td colspan="8">{% trans "Aun no hay sobres, agrega uno " %}<a href="{% url 'main:crear_sobre' %}">{% trans "Aquí"%}</a></td>
                         </tr>
                         {% endfor %}
                     </tbody>

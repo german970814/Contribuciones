@@ -1,6 +1,6 @@
 # Django imports
 from django.contrib import messages
-from django.contrib.auth import login, logout
+from django.contrib.auth import login, logout, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse, reverse_lazy
 from django.db.models import Sum
@@ -9,15 +9,16 @@ from django.utils.translation import ugettext as _
 from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic import ListView
 
+
 # Locale imports
-from .constants import MAIN, ERROR_FORM
+from .constants import MAIN, ERROR_FORM, INFO_FORM
 from .decorators import group_required
-from .mixins import CustomMixinView
+from .mixins import CustomMixinView, FechasRangoFormMixin
 from .models import Sobre, Persona, Observacion, TipoIngreso
 from .forms import (
     FormularioLogearUsuario, FormularioCrearSobre, FormularioCrearPersona,
     FormularioCrearTipoIngreso, FormularioCrearObservacion,
-    FormularioReporteContribuciones
+    FormularioReporteContribuciones, FormularioCrearUsuario
 )
 
 # Python imports
@@ -74,62 +75,116 @@ def logout_view(request):
     return redirect('main:login')  # redirecciona al login
 
 
-@group_required('consultas')
+@group_required('administrador')
+def listar_sobres(request):
+    """Vista para listar los sobres, de acuerdo a un rango de fecha."""
+
+    data = {}
+
+    if request.method == 'POST':
+        form = FechasRangoFormMixin(data=request.POST)
+
+        if form.is_valid():
+            fecha_inicial = form.cleaned_data.get('fecha_inicial')
+            fecha_final = form.cleaned_data.get('fecha_final') + datetime.timedelta(days=1)
+
+            sobres = Sobre.objects.filter(
+                fecha__range=(fecha_inicial, fecha_final)
+            )
+
+            data['sobre_list'] = sobres
+
+            messages.success(
+                request,
+                _(INFO_FORM)
+            )
+        else:
+            messages.error(
+                request,
+                _(ERROR_FORM)
+            )
+    else:
+        form = FechasRangoFormMixin()
+
+    data['form'] = form
+
+    return render(request, MAIN.format('listar_sobres.html'), data)
+
+
+@group_required('consultas', 'administrador')
 def reporte_contribuciones(request):
     """Reporte de personas totalizada por contribuciones"""
 
-    data = {}
+    data = {}  # se crean los datos que seran enviados al template
 
     if request.method == 'POST':
         form = FormularioReporteContribuciones(data=request.POST)
 
         if form.is_valid():
+            # si el formulario es valido, se sacan los campos necesarios
             totalizado = form.cleaned_data.get('totalizado')
             fecha_inicial = form.cleaned_data.get('fecha_inicial')
             fecha_final = form.cleaned_data.get('fecha_final') + datetime.timedelta(days=1)
 
+            # se crea un diccionario para pasar como argumentos de llave valor
             queryset_kwargs = {
                 'fecha__range': (fecha_inicial, fecha_final)
             }
 
             if not totalizado:
+                # si no hay totalizado, busca la persona del formulario
                 persona = form.cleaned_data.get('persona')
+                # lo añade a los argumentos
                 queryset_kwargs['persona'] = persona
 
-            tabla = OrderedDict({'TOTAL': {}})
-            total_global = 0
-            for tipo in TipoIngreso.objects.all():
-                total = 0
-                _totales = {'total': 0}
+            # se crea la tabla, de forma ordenada, para que sea a menera cola
+            tabla = OrderedDict({'TOTAL': {'total': 0}})
 
+            # se recorren todos los tipos de ingresos
+            for tipo in TipoIngreso.objects.prefetch_related('sobres').all():
+                total = 0
+                # se crea una variable temporal, para guardar los totales por tipo de ingreso
+                _totales = {'total': 0}  # se inicializa un total a 0
+
+                # se filtra con los argumentos de llave valor, creados antes
                 sobres = tipo.sobres.filter(**queryset_kwargs)
 
+                # se recorren las formas de pago que tienen los sobres
                 for forma in Sobre.FORMAS_PAGO:
-                    _sobres = sobres.filter(forma_pago=forma[0])  # es una tupla
+                    # forma = ('FO', 'FORMA DE PAGO'), representacion de forma de pago
+                    _sobres = sobres.filter(forma_pago=forma[0])  # se filtra por el primer valor de la tupla
+                    # se crea una variable temporal, para guardar los totales por forma de pago
                     totales = _sobres.aggregate(
-                        **{forma[1]: Sum('valor')}
+                        **{forma[1]: Sum('valor')}  # seria la forma de pago con la suma de los valores
                     )
 
+                    # si no hay valores, lo asigna a 0
                     totales[forma[1]] = totales[forma[1]] or 0
+                    # actualiza el total de el diccionario de tipo de ingreso
                     _totales['total'] += totales[forma[1]]
                     _totales.update(totales)
 
+                    # agrega los totales por forma de pago valores a la tabla principal
                     if forma[1] in tabla['TOTAL']:
                         tabla['TOTAL'][forma[1]] += totales[forma[1]]
                     else:
                         tabla['TOTAL'][forma[1]] = totales[forma[1]]
 
-                total_global += _totales['total']
+                # agrega los totales por tipo de ingreso a la tabla
+                tabla['TOTAL']['total'] += _totales['total']
 
+                # agrega los datos a la tabla
                 tabla.update({str(tipo): _totales})
-            tabla['TOTAL']['total'] = total_global
+            # se vuelve a ordenar la tabla de manera inversa para que el total salga de ultimo
             data['tabla'] = OrderedDict(reversed(list(tabla.items())))
+            # se muestra el mensaje
             messages.success(
                 request,
-                _(ERROR_FORM)
+                _(INFO_FORM)
             )
 
         else:
+            # se muestra el mensaje de error
             messages.error(
                 request,
                 _(ERROR_FORM)
@@ -137,6 +192,7 @@ def reporte_contribuciones(request):
     else:
         form = FormularioReporteContribuciones()
 
+    # se envia el formulario de vuelta
     data['form'] = form
 
     return render(request, MAIN.format('reporte_contribuciones.html'), data)
@@ -176,7 +232,7 @@ class SobreUpdate(CustomMixinView, UpdateView):
         return kwargs  # retorna el diccionario
 
 
-class SobreList(CustomMixinView, ListView):
+class SobreList(CustomMixinView, ListView):  # actualmente sin uso
     """Vista para listar los sobres ingresados."""
 
     model = Sobre
@@ -266,3 +322,24 @@ class ObservacionList(CustomMixinView, ListView):
     model = Observacion
     template_name = MAIN.format('listar_observaciones.html')
     group_required = ('administrador', )
+
+
+class UserCreate(CustomMixinView, CreateView):
+    """Clase para crear usuarios."""
+
+    model = get_user_model()
+    form_class = FormularioCrearUsuario
+    success_url = reverse_lazy('main:crear_usuario')
+    template_name = MAIN.format('crear_usuario.html')
+    group_required = ('administrador', )
+
+
+class UserList(CustomMixinView, ListView):
+    """Clase para listar usuarios."""
+
+    model = get_user_model()
+    template_name = MAIN.format('listar_usuarios.html')
+    group_required = ('administrador', )
+
+    def get_queryset(self):
+        return super().get_queryset().exclude(is_staff=True).exclude(is_superuser=True)

@@ -43,6 +43,7 @@ class CustomModel(object):
         # retorna el diccionario
         return JSON
 
+
 class CustomErrorList(ErrorList):
     """Clase para hacer los errores de los formularios."""
 
@@ -64,6 +65,7 @@ class CustomErrorList(ErrorList):
             ((force_text(e), ) for e in self)
         )
 
+
 class FormMixin(object):
     """Clase Mixin para trabajar con los formularios"""
 
@@ -75,19 +77,31 @@ class FormMixin(object):
         super().__init__(error_class=CustomErrorList, *args, **kwargs)
         for field in self.fields:
             # agrega a todos los campos el placeholder con el label, y la clase
-            self.fields[field].widget.attrs.update({
-                'class': constants.INPUT_CLASS,
-                'placeholder': self.fields[field].label
-            })
+            if hasattr(self.fields[field], 'choices'):
+                self.fields[field].widget.attrs.update({
+                    'class': constants.SELECT_CLASS,
+                    'placeholder': self.fields[field].label,
+                    'tabindex': '-1'
+                })
+            else:
+                self.fields[field].widget.attrs.update({
+                    'class': constants.INPUT_CLASS,
+                    'placeholder': self.fields[field].label
+                })
 
     def add_class_error_to_input(self):
         """Agrega una clase de error de css al input."""
         for field in self.fields:
-            if field in self._errors:
+            if getattr(self, '_errors', None) is not None and field in self._errors:
                 # si la clase está en los errores, le asigan la clase al input
-                self.fields[field].widget.attrs.update({
-                    'class': constants.CSS_ERROR_CLASS + ' ' + constants.INPUT_CLASS
-                })
+                if hasattr(self.fields[field], 'choices'):
+                    self.fields[field].widget.attrs.update({
+                        'class': constants.CSS_ERROR_CLASS + ' ' + constants.SELECT_CLASS
+                    })
+                else:
+                    self.fields[field].widget.attrs.update({
+                        'class': constants.CSS_ERROR_CLASS + ' ' + constants.INPUT_CLASS
+                    })
 
     def is_valid(self, *args, **kwargs):
         # se sobreescribe el metodo is_valid
@@ -155,7 +169,7 @@ class CustomMixinView(object):
         # agrega el mensaje de success al formulario
         messages.success(
             self.request,
-            _('Se ha completado el formulario exitosamente')
+            _(constants.SUCCESS_FORM)
         )
         return super().form_valid(form)
 

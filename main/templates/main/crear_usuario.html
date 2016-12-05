@@ -7,23 +7,22 @@
     <div class="col-md-12 col-xs-12">
         <div class="x_panel">
             <div class="x_title">
-                <h2>{% trans "Formulario de Personas" %} <small>{% trans "Agrega la información de una persona" %}</small></h2>
+                <h2>{% trans "Formulario de Usuarios" %} <small>{% trans "Agrega la información de un usuario" %}</small></h2>
                 <div class="clearfix"></div>
             </div>
             <div class="x_content">
                 <br />
                 <form id="formulario" class="form-horizontal form-label-left input_mask" method='POST' enctype="multipart/form-data">
                     {% csrf_token %}
-                    {{ form.hidden }}
                     <div class="row">
                         <div class="col-md-4 col-sm-4 col-xs-12 form-group has-feedback">
                             <div class="form-group">
-                                <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ form.nombre.label }}</label>
+                                <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ form.email.label }}</label>
                                 <div class="col-md-9 col-sm-9 col-xs-12 form-group has-feedback">
-                                    {{ form.nombre }}
+                                    {{ form.email }}
                                     <span class="fa fa-user form-control-feedback right" aria-hidden="true"></span>
                                     <ul class="parsley-errors-list filled">
-                                        {{ form.nombre.errors }}
+                                        {{ form.email.errors }}
                                     </ul>
                                 </div>
                             </div>
@@ -31,12 +30,12 @@
 
                         <div class="col-md-4 col-sm-4 col-xs-12 form-group has-feedback">
                             <div class="form-group">
-                                <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ form.primer_apellido.label }}</label>
+                                <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ form.first_name.label }}</label>
                                 <div class="col-md-9 col-sm-9 col-xs-12 form-group">
-                                    {{ form.primer_apellido }}
+                                    {{ form.first_name }}
                                     <span class="fa fa-user form-control-feedback right" aria-hidden="true"></span>
                                     <ul class="parsley-errors-list filled">
-                                        {{ form.primer_apellido.errors }}
+                                        {{ form.first_name.errors }}
                                     </ul>
                                 </div>
                             </div>
@@ -44,12 +43,12 @@
 
                         <div class="col-md-4 col-sm-4 col-xs-12 form-group has-feedback">
                             <div class="form-group">
-                                <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ form.segundo_apellido.label }}</label>
+                                <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ form.last_name.label }}</label>
                                 <div class="col-md-9 col-sm-9 col-xs-12 form-group has-feedback">
-                                    {{ form.segundo_apellido }}
+                                    {{ form.last_name }}
                                     <span class="fa fa-user form-control-feedback right" aria-hidden="true"></span>
                                     <ul class="parsley-errors-list filled">
-                                        {{ form.segundo_apellido.errors }}
+                                        {{ form.last_name.errors }}
                                     </ul>
                                 </div>
                             </div>
@@ -59,12 +58,12 @@
                     <div class="row">
                         <div class="col-md-4 col-sm-4 col-xs-12 form-group has-feedback">
                             <div class="form-group">
-                                <label class="control-label col-md-3 col-sm-3 col-xs-12" style="right: 2%;">{{ form.cedula.label }}</label>
+                                <label class="control-label col-md-3 col-sm-3 col-xs-12" style="right: 2%;">{{ form.password.label }}</label>
                                 <div class="col-md-9 col-sm-9 col-xs-12 form-group has-feedback">
-                                    {{ form.cedula }}
+                                    {{ form.password }}
                                     <span class="fa fa-credit-card form-control-feedback right" aria-hidden="true"></span>
                                     <ul class="parsley-errors-list filled">
-                                        {{ form.cedula.errors }}
+                                        {{ form.password.errors }}
                                     </ul>
                                 </div>
                             </div>
@@ -72,12 +71,24 @@
 
                         <div class="col-md-4 col-sm-4 col-xs-12 form-group has-feedback">
                             <div class="form-group">
-                                <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ form.telefono.label }}</label>
+                                <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ form.password_confirmation.label }}</label>
                                 <div class="col-md-9 col-sm-9 col-xs-12 form-group has-feedback">
-                                    {{ form.telefono }}
+                                    {{ form.password_confirmation }}
                                     <span class="fa fa-phone form-control-feedback right" aria-hidden="true"></span>
                                     <ul class="parsley-errors-list filled">
-                                        {{ form.telefono.errors }}
+                                        {{ form.password_confirmation.errors }}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 col-sm-4 col-xs-12 form-group has-feedback">
+                            <div class="form-group">
+                                <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ form.grupo.label }}</label>
+                                <div class="col-md-9 col-sm-9 col-xs-12 form-group has-feedback">
+                                    {{ form.grupo }}
+                                    <ul class="parsley-errors-list filled">
+                                        {{ form.grupo.errors }}
                                     </ul>
                                 </div>
                             </div>

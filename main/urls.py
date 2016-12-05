@@ -6,7 +6,8 @@ from .views import (
     login_view, logout_view, home_view, SobreCreate, SobreUpdate,
     PersonaCreate, PersonaUpdate, TipoIngresoCreate, TipoIngresoUpdate,
     ObservacionCreate, ObservacionUpdate, SobreList, PersonaList,
-    TipoIngresoList, ObservacionList, reporte_contribuciones
+    TipoIngresoList, ObservacionList, reporte_contribuciones, listar_sobres,
+    UserCreate, UserList
 )
 from .api import get_persona_api
 
@@ -16,7 +17,7 @@ urlpatterns = [
     url(r'^home/$', home_view, name='home'),
     url(r'^sobres/crear/$', SobreCreate.as_view(), name='crear_sobre'),
     url(r'^sobres/editar/(?P<pk>\d+)/$', SobreUpdate.as_view(), name='editar_sobre'),
-    url(r'^sobres/lista/$', SobreList.as_view(), name='listar_sobres'),
+    url(r'^sobres/lista/$', listar_sobres, name='listar_sobres'),
     url(r'^personas/crear/$', PersonaCreate.as_view(), name='crear_persona'),
     url(r'^personas/editar/(?P<pk>\d+)/$', PersonaUpdate.as_view(), name='editar_persona'),
     url(r'^personas/lista/$', PersonaList.as_view(), name='listar_personas'),
@@ -26,6 +27,8 @@ urlpatterns = [
     url(r'^observacion/crear/$', ObservacionCreate.as_view(), name='crear_observacion'),
     url(r'^observacion/editar/(?P<pk>\d+)/$', ObservacionUpdate.as_view(), name='editar_observacion'),
     url(r'^observacion/lista/$', ObservacionList.as_view(), name='listar_observaciones'),
+    url(r'^usuarios/crear/$', UserCreate.as_view(), name='crear_usuario'),
+    url(r'^usuarios/lista/$', UserList.as_view(), name='listar_usuarios'),
     url(r'^reportes/contribuciones/$', reporte_contribuciones, name='reporte_contribuciones'),
     # API
     url(r'^api/v1\.1/persona/(?P<id_persona>\d+)/$', get_persona_api, name='api>get_persona'),

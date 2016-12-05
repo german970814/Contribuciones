@@ -1,6 +1,7 @@
 # Django imports
 from django import forms
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth.models import Group
 from django.utils.translation import ugettext_lazy as _
 
 # Locale imports
@@ -78,6 +79,9 @@ class FormularioCrearSobre(CustomModelForm):
 
         # llama el __init__ de el padre
         super().__init__(*args, **kwargs)
+
+        # se agrega la clase de input a el radiobutton
+        self.fields['diligenciado'].widget.attrs.update({'class': constants.INPUT_CLASS})
 
         if self.persona is not None:  # si encuentra la persona de las kwargs
             self.initial.update(self.persona.to_json())  # actualiza el formulario inicial, con el json
@@ -168,6 +172,7 @@ class FormularioCrearTipoIngreso(CustomModelForm):
             'nombre',
         )
 
+
 class FormularioCrearObservacion(CustomModelForm):
     """Formulario para crear observaciones."""
 
@@ -202,3 +207,46 @@ class FormularioReporteContribuciones(FechasRangoFormMixin):
             self.add_error(
                 'persona', _('Debe escoger una persona, o marcar la casilla de totalizado')
             )
+
+
+class FormularioCrearUsuario(CustomModelForm):
+    """Clase para crear usuarios en el sistema."""
+
+    grupo = forms.ModelChoiceField(queryset=Group.objects.all(), label=_('Permisos'))
+    password_confirmation = forms.CharField(
+        max_length=255, label=_('Repita contraseña'), widget=forms.PasswordInput
+    )
+
+    class Meta:
+        model = get_user_model()
+        fields = (
+            'email', 'password', 'first_name', 'last_name'
+        )
+        widgets = {
+            'password': forms.PasswordInput
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['email'].required = True
+        self.fields['first_name'].required = True
+        self.fields['last_name'].required = True
+
+    def clean(self, *args, **kwargs):
+        cleaned_data = super().clean(*args, **kwargs)
+        password_1 = cleaned_data.get('password', None) or None
+        password_2 = cleaned_data.get('password_confirmation', None) or None
+
+        if password_1 is not None and password_2 is not None:
+            if password_1 != password_2:
+                self.add_error(
+                    'password',
+                    _('Contraseñas no coinciden, asegurate de que las contraseñas coincidan')
+                )
+
+    def save(self, commit=True, *args, **kwargs):
+        self.instance.set_password(self.cleaned_data.get('password'))
+        self.instance.username = self.instance.email[:30]
+        user = super().save(commit=commit, *args, **kwargs)
+        user.groups.add(self.cleaned_data.get('grupo'))
+        return user

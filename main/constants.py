@@ -3,13 +3,15 @@
 # CSS
 CSS_ERROR_CLASS = 'parsley-error'
 INPUT_CLASS = 'form-control'
-SELECT_CLASS = 'form-control'
+SELECT_CLASS = 'form-control select2_single'
 
 # DIRECTORIES
 MAIN = 'main/{}'
 
 # MESSAGES
 ERROR_FORM = 'Ha ocurrido un error al enviar el formulario, intentalo nuevamente'
+SUCCESS_FORM = 'Se ha completado exitosamente el formulario'
+INFO_FORM = 'Se muestran los resultados'
 
 # API
 RESPONSE_SUCCESS = 200

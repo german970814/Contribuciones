@@ -18,6 +18,7 @@
                     <thead>
                         <tr>
                             <th>{% trans "Nombre" %}</th>
+                            <th>{% trans "Comandos" %}</th>
                         </tr>
                     </thead>
 
@@ -25,8 +26,9 @@
                         {% for tipo in tipoingreso_list %}
                         <tr>
                             <td>{{ tipo.nombre|upper }}</td>
+                            <td><a href="{% url 'main:editar_tipo_ingreso' tipo.id %}" class="fa fa-edit btn btn-success"></a></td>
                             {% empty %}
-                            <td colspan="1">{% trans "Aun no hay tipos de ingreso, agrega uno " %}<a href="{% url 'main:crear_tipo_ingreso' %}">{% trans "Aquí"%}</a></td>
+                            <td colspan="2">{% trans "Aun no hay tipos de ingreso, agrega uno " %}<a href="{% url 'main:crear_tipo_ingreso' %}">{% trans "Aquí"%}</a></td>
                         </tr>
                         {% endfor %}
                     </tbody>

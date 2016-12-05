@@ -43,4 +43,9 @@ $(document).ready(function () {
     $('#id_fecha_final').on("dp.change",function(e){
         $('#id_fecha_inicial').data("DateTimePicker").maxDate(e.date);
     });
+
+    $(".select2_single").select2({
+        placeholder: "Selecciona una opción",
+        allowClear: true
+    });
 });
