@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.core.urlresolvers import reverse_lazy
 from django.db import models
+from django.db.utils import IntegrityError
 from django.forms.utils import ErrorList
 from django.utils.translation import ugettext_lazy as _
 from django.utils.decorators import method_decorator
@@ -27,7 +28,7 @@ class CustomModel(object):
 
         # si no hay fields retorna la excepcion
         if fields is None:
-            return NotImplementedError(
+            raise NotImplementedError(
                 _('No se ha definido método .to_json para la clase %s' % self.__class__.__name__)
             )
 
@@ -37,11 +38,23 @@ class CustomModel(object):
             # si los campos no estan en self.__dir__()
             if field not in self.__dir__():  # self.__dict__
                 # levanta la excepcion
-                return ValueError('Field "%s" not found in "%s"' % (field, self.__class__.__name__))
+                raise ValueError('Field "%s" not found in "%s"' % (field, self.__class__.__name__))
             # agrega el campo en mayúscula
             JSON[field] = getattr(self, field).__str__().upper()
         # retorna el diccionario
         return JSON
+
+    def save(self, *args, **kwargs):
+        # antes de guardar busca en los campos
+        for field in self._meta.fields:
+            # si el campo es obligatorio
+            if not field.blank and not field.null:
+                # si está vacio
+                if getattr(self, field.name, '') == '':
+                    # levanta una excepcion
+                    raise IntegrityError('{} No puede estar vacio'.format(field.name))
+        # retorna el super
+        return super().save(*args, **kwargs)
 
 
 class CustomErrorList(ErrorList):

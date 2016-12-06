@@ -39,7 +39,7 @@ class Persona(CustomModel, models.Model):
             self.cedula
         )
 
-    def to_json(self, *args, **kwargs):
+    def to_json(self, *args):
         if not args:
             fields = []
             for field in self._meta.fields:
@@ -47,7 +47,7 @@ class Persona(CustomModel, models.Model):
                     fields.append(field.name)
         else:
             fields = args
-        return super().to_json(*fields, **kwargs)
+        return super().to_json(*fields)
 
 
 class Observacion(CustomModel, models.Model):
@@ -81,8 +81,8 @@ class Sobre(CustomModel, models.Model):
     tipo_ingreso = models.ForeignKey(TipoIngreso, verbose_name=_('tipo ingreso'), related_name='sobres')
     valor = models.BigIntegerField(verbose_name=_('valor'))
     forma_pago = models.CharField(max_length=2, verbose_name=_('forma de pago'), choices=FORMAS_PAGO)
-    persona = models.ForeignKey(Persona, verbose_name='persona', blank=True, null=True, related_name='sobres')
-    observaciones = models.ForeignKey(Observacion, verbose_name='observaciones', blank=True, null=True)
+    persona = models.ForeignKey(Persona, verbose_name=_('persona'), blank=True, null=True, related_name='sobres')
+    observaciones = models.ForeignKey(Observacion, verbose_name=_('observaciones'), blank=True, null=True)
 
     class Meta:
         verbose_name = _('Sobre')
