@@ -2,7 +2,7 @@
 from django.db.utils import IntegrityError, DataError
 
 # Locale imports
-from .base_test import CustomBaseTestCase, ModelTestCase
+from .base_test import ModelTestCase
 from ..models import Sobre, Persona, TipoIngreso, Observacion
 
 
