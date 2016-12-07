@@ -122,7 +122,7 @@ class CustomBaseTestCase(TestCase):
             elif isinstance(field, (CharField, TextField, CharFieldForm, TypedChoiceField)):
                 if getattr(field, 'choices', None) or None is not None:
                     # si tiene opciones, coge la primera
-                    dicc[field.name] = field.choices[0][0]
+                    dicc[field.name] = field.choices[1][0]
                 else:
                     dicc[field.name] = self.RAW_STRING
             elif isinstance(field, (IntegerField, IntegerFieldForm)):
@@ -135,7 +135,7 @@ class CustomBaseTestCase(TestCase):
                 # agrega el campo tal cual venga en el diccionario
                 dicc.update(field)
             elif isinstance(field, ModelChoiceField):
-                dicc[field.name] = self.create_object(field.queryset.model)
+                dicc[field.name] = self.create_object(field.queryset.model).id
             elif isinstance(field, AutoField):
                 # no hace nada
                 pass
@@ -147,11 +147,17 @@ class CustomBaseTestCase(TestCase):
         return dicc
 
     def get_user(self):
+        """Metodo para devolver un usuario"""
         if hasattr(self, '_user'):
+            # si hay usuario, lo retorna
             return self._user
-        self._user = get_user_model().objects.create(
-            **self.get_initial([x for x in get_user_model()._meta.fields])
-        )
+        # crea los datos
+        data = self.get_initial([x for x in get_user_model()._meta.fields])
+        del data['last_login']  # elimina las fechas, para evitar los warnings
+        del data['date_joined']
+        # pasa los datos
+        self._user = get_user_model().objects.create(**data)
+        # retorna el usuario
         return self._user
 
     @property
@@ -180,9 +186,9 @@ class ModelTestCase(CustomBaseTestCase):
         super().setUp()
         # self._configure_meta()
         self.required_fields = {
-            x for x in self.model._meta.fields if \
-                not x.blank and not x.null and not x.is_relation \
-                and not x.get_internal_type() == 'AutoField'
+            x for x in self.model._meta.fields
+            if not x.blank and not x.null and not x.is_relation and not
+            x.get_internal_type() == 'AutoField'
         }
 
     def required_fields(self):
@@ -193,8 +199,8 @@ class ModelTestCase(CustomBaseTestCase):
 
         # saca todos los campos
         all_fields = {
-            x for x in self.model._meta.fields if \
-                not x.is_relation and not x.get_internal_type() == 'AutoField'
+            x for x in self.model._meta.fields if not
+            x.is_relation and not x.get_internal_type() == 'AutoField'
         }
 
         for field in required_fields:
