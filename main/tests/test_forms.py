@@ -8,7 +8,8 @@ from .base_test import FormTestCase
 from ..forms import (
     FormularioLogearUsuario, FormularioCrearSobre, FormularioCrearPersona,
     FormularioCrearTipoIngreso, FormularioCrearObservacion,
-    FormularioReporteContribuciones, FormularioCrearUsuario
+    FormularioReporteContribuciones, FormularioCrearUsuario,
+    CambiarContrasenaForm
 )
 from ..models import Persona, Sobre
 
@@ -376,6 +377,16 @@ class FormularioReporteContribucionesTest(FormTestCase):
     def test_error_css_class(self):
         super().error_class_form_invalid()
 
+    def test_persona_is_required_if_totalizado_is_false(self):
+        """Verifica que el campo de persona sea requerido si el campo de totalizado es False."""
+
+        data = self.get_initial(self.required_fields)
+        data['totalizado'] = False
+        form = self.form(data=data)
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('persona', form.errors)
+
 
 class FormularioCrearUsuarioTest(FormTestCase):
     """Pruebas para el formulario de crear usuarios."""
@@ -392,13 +403,180 @@ class FormularioCrearUsuarioTest(FormTestCase):
     def test_labels_with_ugettext(self):
         super().labels_with_ugettext()
 
-    # def test_required_fields(self):
-    #     get_user_model().objects.all().delete()
-    #     Group.objects.all().delete()
-    #     super().required_fields()
+    def test_required_fields(self):
+        super().required_fields()
 
     def test_default_values(self):
         super().default_values(excludes=['totalizado'])
 
     def test_error_css_class(self):
         super().error_class_form_invalid()
+
+    def test_password_confirmation_have_input_password(self):
+        """Verifica que el campo de la contraseña tenga el widget PasswordInput."""
+
+        from django.forms import PasswordInput  # se importa el widget
+
+        form = self.form()
+
+        # se verifica que ambos campos tengan el widget, para proteger la contraseña
+        self.assertIsInstance(form.fields['password_confirmation'].widget, PasswordInput)
+        self.assertIsInstance(form.fields['password'].widget, PasswordInput)
+
+    def test_email_fields_required(self):
+        """Verifica que el campo de email sea un campo requerido."""
+
+        form = self.form()
+        # se verifica que el email, sea requerido
+        self.assertTrue(form.fields['email'].required)
+
+    def test_password_unique(self):
+        """Verifica que las contraseñas escritas por el usuario, sean las mismas."""
+
+        # se crean los datos
+        data = self.get_initial(self.required_fields)
+        # se cambia la contraseña 2
+        data['password_confirmation'] = self.RAW_STRING_2
+
+        # se crea el formulario con los datos
+        form = self.form(data=data)
+
+        # se verifica que no sea valido
+        self.assertFalse(form.is_valid())
+        # se mira si el error es de contraseña
+        self.assertIn('password', form.errors)
+
+        # se cambia la contraseña por una igual a la de data
+        data['password_confirmation'] = data['password']
+
+        # se vuelve a llenar el formulario
+        form = self.form(data=data)
+        # ahora es valido
+        self.assertTrue(form.is_valid())
+
+    def test_create_user_with_group(self):
+        """Verifica que se cree el usuario adecuadamente con el grupo escogido."""
+
+        # se crean los datos iniciales
+        data = self.get_initial(self.required_fields)
+
+        # se envian los datos al formulario
+        form = self.form(data=data)
+
+        # se verifica que sea valido
+        self.assertTrue(form.is_valid())
+
+        # se obtiene el modelo de usuario
+        User = get_user_model()
+        user_form = form.save()  # se obtiene el usuario de el formulario
+        grupo = Group.objects.first()  # se obtiene el grupo creado por los datos
+
+        # se verifica que la instancia devuelta por el formulario sea un usuario
+        self.assertIsInstance(user_form, User)
+        # se verifica la contraseña de el usuario
+        self.assertTrue(user_form.check_password(data['password']))
+        self.assertTrue(user_form.check_password(data['password_confirmation']))
+        # se verifica que el grupo, haya sido correctamente asignado al usuario
+        self.assertEqual(user_form.groups.first().id, grupo.id)
+
+
+class CambiarContrasenaFormTest(FormTestCase):
+    """Pruebas para el formulario de cambio de contraseña."""
+
+    class Meta:
+        form = CambiarContrasenaForm
+
+    def setUp(self):
+        super().setUp()
+
+    def test_error_form_with_empty_data(self):
+        super().error_form_with_empty_data()
+
+    def test_labels_with_ugettext(self):
+        super().labels_with_ugettext()
+
+    def test_required_fields(self):
+        super().required_fields()
+
+    def test_default_values(self):
+        super().default_values()
+
+    def test_error_css_class(self):
+        super().error_class_form_invalid()
+
+    def test_passwords_have_input_password(self):
+        """Verifica que el campo de la contraseña tenga el widget PasswordInput."""
+
+        from django.forms import PasswordInput  # se importa el widget
+
+        form = self.form()
+
+        # se verifica que ambos campos tengan el widget, para proteger la contraseña
+        self.assertIsInstance(form.fields['password_1'].widget, PasswordInput)
+        self.assertIsInstance(form.fields['password_2'].widget, PasswordInput)
+
+    def test_password_unique(self):
+        """Verifica que las contraseñas escritas por el usuario, sean las mismas."""
+
+        # se crean los datos
+        data = self.get_initial(self.required_fields)
+        # se cambia la contraseña 2
+        data['password_2'] = self.RAW_STRING_2
+
+        # se crea el formulario con los datos
+        form = self.form(data=data)
+
+        # se verifica que no sea valido
+        self.assertFalse(form.is_valid())
+        # se mira si el error es de contraseña
+        self.assertIn('password_1', form.errors)
+
+        # se cambia la contraseña por una igual a la de data
+        data['password_2'] = data['password_1']
+
+        # se vuelve a llenar el formulario
+        form = self.form(data=data)
+        # ahora es valido
+        self.assertTrue(form.is_valid())
+
+    def test_form_return_authenticated_user(self):
+        """Verifica que el formulario retorne un usuario autentificado."""
+
+        # se crea u obtiene el usuario
+        user = self.get_user()
+
+        # se crean las contraseñas nuevas
+        data = {
+            'password_1': self.RAW_STRING,
+            'password_2': self.RAW_STRING
+        }
+
+        # se crea el formulario con el atributo user
+        form = self.form(data=data, usuario=user)
+
+        # se verifica que sea valido
+        self.assertTrue(form.is_valid())
+
+        # se guarda el usuario
+        user_form = form.save()
+
+        # se verifica que el usuario retornado sea el mismo
+        self.assertEqual(user.id, user_form.id)
+        # se verifica que tenga un backend, lo que quiere decir que fue autentificado
+        self.assertTrue(hasattr(user_form, 'backend'))
+        # se verifica la contraseña
+        self.assertTrue(user.check_password(data['password_1']))
+
+    def test_raise_error_if_usuario_keyword_not_provided(self):
+        """Verifica que el formulario arroje error si no hay usuario."""
+
+        # se crea el formulario con los datos iniciales
+        data = self.get_initial(self.required_fields)
+        form = self.form(data=data)
+
+        # se valida el formulario
+        self.assertTrue(form.is_valid())
+
+        # se verifica el error
+        with self.assertRaises(NotImplementedError):
+            form.save()

@@ -88,25 +88,28 @@ class CustomBaseTestCase(TestCase):
     def create_object(self, model_class):
         """Crea un objeto, con sus campos relacionados."""
 
-        # inicializa una lista
-        field_list = []
-        # recorre cada campo
-        for field in model_class._meta.fields:
-            # siempre y cuando el campo no sea el id
-            if field.get_internal_type() != 'AutoField':
-                # si no es una relacion
-                if not field.is_relation:
-                    # si es obligatorio el campo
-                    if not field.blank and not field.null:
-                        # lo añade a la lista
-                        field_list.append(field)
-                else:
-                    # si es una relacion
-                    relation = self.create_object(field.related.model)  # recursividad
-                    # agrega el objeto como diccionario
-                    field_list.append({field.name: relation})
-        # retorna la creacion del objeto con los valores predeterminados
-        return model_class.objects.create(**self.get_initial(field_list))
+        try:
+            return model_class.objects.get()
+        except model_class.DoesNotExist:
+            # inicializa una lista
+            field_list = []
+            # recorre cada campo
+            for field in model_class._meta.fields:
+                # siempre y cuando el campo no sea el id
+                if field.get_internal_type() != 'AutoField':
+                    # si no es una relacion
+                    if not field.is_relation:
+                        # si es obligatorio el campo
+                        if not field.blank and not field.null:
+                            # lo añade a la lista
+                            field_list.append(field)
+                    else:
+                        # si es una relacion
+                        relation = self.create_object(field.related.model)  # recursividad
+                        # agrega el objeto como diccionario
+                        field_list.append({field.name: relation})
+            # retorna la creacion del objeto con los valores predeterminados
+            return model_class.objects.create(**self.get_initial(field_list))
 
     def get_initial(self, array):
         """Retorna un diccionario con valores iniciales, para la creacion de cualquier objeto."""
