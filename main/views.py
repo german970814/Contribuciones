@@ -30,13 +30,17 @@ import datetime
 def login_view(request):
     """Vista de login."""
 
-    # primero verifica si existe un usuario
-    if request.user.is_authenticated():
-        # de ser asi, lo redirecciona a /home/
-        return redirect('main:home')
-
     # busca la pagina siguiente en caso de que sea por redireccion
     next_page = request.GET.get('next', None)
+
+    # luego verifica si existe un usuario
+    if request.user.is_authenticated():
+        # si hay next page
+        if next_page is not None:
+            # redirecciona a next_page
+            return redirect(next_page)
+        # de no ser asi, lo redirecciona a /home/
+        return redirect('main:home')
 
     if request.method == 'POST':
         # se crea el formulario con los datos del POST

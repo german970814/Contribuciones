@@ -3,6 +3,7 @@ from django.test import TestCase
 from django.test.client import Client
 from django.http import HttpResponse
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.db.utils import IntegrityError
 from django.db.models.fields import (
     CharField, EmailField, IntegerField, DateField,
@@ -14,8 +15,14 @@ from django.forms import (
     BooleanField as BooleanFieldForm, TypedChoiceField,
     ModelChoiceField
 )
+from django.views.generic import View
+from django.views.generic.edit import UpdateView
+from django.core.urlresolvers import reverse
+from django.conf import settings
+
 # Locale imports
 from .. import constants
+from ..urls import urlpatterns
 
 # Python imports
 import datetime
@@ -27,6 +34,8 @@ class MetaClassTest(object):
     def __init__(self, options=None):
         self.model = getattr(options, 'model', None)
         self.form = getattr(options, 'form', None)
+        self.view = getattr(options, 'view', None)
+        self.app = 'main'
 
 
 class CustomBaseTestCase(TestCase):
@@ -160,6 +169,8 @@ class CustomBaseTestCase(TestCase):
         del data['date_joined']
         # pasa los datos
         self._user = get_user_model().objects.create(**data)
+        self._user.set_password(self.RAW_STRING)
+        self._user.save()
         # retorna el usuario
         return self._user
 
@@ -335,3 +346,159 @@ class FormTestCase(CustomBaseTestCase):
                 else:
                     self.assertIn(constants.INPUT_CLASS, form.fields[field].widget.attrs['class'])
                     self.assertIn(constants.CSS_ERROR_CLASS, form.fields[field].widget.attrs['class'])
+
+
+class ViewTestCase(CustomBaseTestCase):
+    """Pruebas de base para las vistas."""
+
+    def setUp(self):
+        super().setUp()
+        self.url_base = self.app + ':{}'
+        self.template_base = self.app + '/{}'
+
+    def get_url(self):
+        """Retorna la url para la vista de la prueba."""
+        # recorre todas las urls
+        for url in urlpatterns:
+            # si la url tiene el mismo nombre de la vista
+            if url.callback.__name__ == self.view.__name__:
+                # si es un UpdateView
+                if UpdateView in getattr(self.view, '__mro__', [None]):
+                    # retorna la url, con argumentos
+                    return reverse(
+                        self.url_base.format(url.name),
+                        args=(self.view.model.objects.first().id, )
+                    )
+                # retorna la url sin argumentos
+                return reverse(self.url_base.format(url.name))
+        # levanta una excepcion
+        raise ValueError('Vista "{}" no asignada a ninguna url')
+
+    def get_template(self):
+        """Retorna el template que deberia devolver una vista."""
+        # si tiene mro
+        if View in getattr(self.view, '__mro__', [None]):
+            # retorna el template definido
+            return self.view.template_name
+        # si no, lo busca en los atributos de la clase
+        if self.template != self.template_base and getattr(self, 'template', None) or None is not None:
+            # retorna el template
+            return self.template
+        # levanta una excepcion
+        raise NameError('No fue encontrado el template.')
+
+    def login_usuario(self):
+        """Logea el usuario para el cliente."""
+        # crea el usuario
+        user = self.get_user()
+        # setea la contraseña
+        user.set_password(self.RAW_STRING)
+        # guarda el usuario
+        user.save()
+        # verifica la contraseña
+        self.assertTrue(user.check_password(self.RAW_STRING))
+        # verifica que se logee el usuario adecuadamente
+        self.assertTrue(self.client.login(email=user.email, password=self.RAW_STRING))
+
+    def GET(self, **options):
+        """Hace una peticion de tipo GET."""
+        # obtiene la url
+        url = options.pop('url', None) or self.get_url()
+        # crea la respuesta
+        response = self.client.get(url, **options)
+
+        # si retorna 200
+        if response.status_code == constants.RESPONSE_SUCCESS:
+            # retorna la respuesta
+            return response
+
+        # logea el usuario
+        self.login_usuario()
+        # vuelve a hacer la peticion
+        response = self.client.get(url, **options)
+
+        # si es 200
+        if response.status_code == constants.RESPONSE_SUCCESS:
+            # retorna la respuesta con usuario logeado
+            return response
+
+        # lista de grupos posibles
+        grupos = ['administrador', 'digitador', 'consultas']
+
+        while grupos:
+            # crea un grupo
+            grupo = Group.objects.create(name=grupos.pop())
+            grupo.save()
+            # le agrega el grupo al usuario
+            self._user.groups.add(grupo)
+            # vuelve a hacer la peticion
+            response = self.client.get(url, **options)
+            # si retorna 200
+            if response.status_code == constants.RESPONSE_SUCCESS:
+                # rompe el ciclo
+                break
+
+        # retorna la respuesta
+        return response
+
+    def POST(self, **options):
+        # obtiene la url
+        url = options.pop('url', None) or self.get_url()
+        # crea la respuesta
+        response = self.client.post(url, **options)
+
+        # si retorna 200
+        if settings.LOGIN_URL not in response.get('Location', [None]):
+            # retorna la respuesta
+            return response
+
+        # logea el usuario
+        self.login_usuario()
+        # vuelve a hacer la peticion
+        response = self.client.post(url, **options)
+
+        # si es 200
+        if settings.LOGIN_URL not in response.get('Location', [None]):
+            # retorna la respuesta con usuario logeado
+            return response
+
+        # lista de grupos posibles
+        grupos = ['administrador', 'digitador', 'consultas']
+
+        while grupos:
+            # crea un grupo
+            grupo = Group.objects.create(name=grupos.pop())
+            grupo.save()
+            # le agrega el grupo al usuario
+            self._user.groups.add(grupo)
+            # vuelve a hacer la peticion
+            response = self.client.post(url, **options)
+            # si retorna 200
+            if settings.LOGIN_URL not in response.get('Location', [None]):
+                # rompe el ciclo
+                break
+
+        # retorna la respuesta
+        return response
+
+    def response_is_200(self):
+        """Prueba que la peticion get, siempre retorne 200."""
+
+        response = self.GET()
+        self.assertEqual(response.status_code, constants.RESPONSE_SUCCESS)
+
+    def response_is_template(self):
+        """Verifica que la respuesta, retorne el template."""
+
+        response = self.GET()
+        self.assertTemplateUsed(response, self.get_template())
+
+    def post_error(self):
+        """Verifica que ante un error de formulario, retorne la misma pagina con el mensaje de error."""
+
+        response = self.POST(data={})
+
+        self.assertEqual(response.status_code, constants.RESPONSE_SUCCESS)
+        self.assertIn(constants.ERROR_FORM, response.content.decode('utf-8'))
+        self.assertTemplateUsed(response, self.get_template())
+        self.assertEqual([x.tags for x in response.context['messages']], ['error'])

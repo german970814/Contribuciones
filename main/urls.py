@@ -1,5 +1,9 @@
 # Django imports
 from django.conf.urls import url
+from django.shortcuts import redirect
+# from django.core.urlresolvers import reverse
+# from django.views.generic import RedirectView
+# from django.http import HttpResponseRedirect
 
 # Locale impors
 from .views import (
@@ -12,6 +16,7 @@ from .views import (
 from .api import get_persona_api
 
 urlpatterns = [
+    url(r'^$', lambda x: redirect('main:login')),
     url(r'^login/$', login_view, name='login'),
     url(r'^logout/$', logout_view, name='logout'),
     url(r'^home/$', home_view, name='home'),
