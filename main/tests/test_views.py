@@ -6,10 +6,13 @@ from django.core.urlresolvers import reverse
 # Locale imports
 from .base_test import ViewTestCase
 from .. import constants
-from ..forms import FormularioLogearUsuario
+from ..forms import FormularioLogearUsuario, FormularioReporteContribuciones
 from ..views import (
     login_view, home_view, logout_view, listar_sobres, reporte_contribuciones,
-    SobreCreate
+    SobreCreate, SobreUpdate, PersonaCreate, PersonaUpdate, TipoIngresoCreate,
+    TipoIngresoUpdate, ObservacionCreate, ObservacionUpdate, UserCreate,
+    PersonaList, TipoIngresoList, ObservacionList, UserList,
+    SetPasswordView
 )
 from ..models import Sobre
 
@@ -200,6 +203,7 @@ class ReporteContribuciones(ViewTestCase):
 
     class Meta:
         view = reporte_contribuciones
+        form = FormularioReporteContribuciones
 
     def setUp(self):
         super().setUp()
@@ -213,6 +217,119 @@ class ReporteContribuciones(ViewTestCase):
 
     def test_post_error(self):
         super().post_error()
+
+    def test_get_totales_by_persona(self):
+        """Verifica que se pueda ver los totales de las contribuciones por persona."""
+
+        # se crea una instancia del formulario
+        form_instance = self.form()
+        # se sacan los campos obligatorios
+        required_fields = {(field, form_instance.fields[field]) for field in form_instance.fields}
+
+        # se crea un sobre
+        sobre = self.create_object(Sobre)
+
+        # se crean los datos iniciales
+        data = self.get_initial(required_fields)
+        # se marca que no hay totalizado
+        data['totalizado'] = False
+
+        # se genera la respuesta
+        response = self.POST(data=data)
+
+        # se verifica que retorne 200
+        self.assertEqual(response.status_code, constants.RESPONSE_SUCCESS)
+        # se espera que venga la tabla en la respuesta
+        self.assertIn('tabla', response.context)
+        # se saca la tabla
+        tabla = response.context['tabla']
+        # se verifica que el total, sea igual al total de lo que ha dado una persona
+        self.assertEqual(tabla['TOTAL']['total'].__str__(), str(sobre.valor))
+        # se verifica el total por forma de pago
+        self.assertEqual(
+            tabla['TOTAL'][sobre.get_forma_pago_display().upper()].__str__(),
+            sobre.valor.__str__()
+        )
+
+    def test_form_with_totalizado(self):
+        """Verifica que se envien los resultados adecuadamente por totales generales en la iglesia."""
+
+        # se crea una instancia del formulario
+        form_instance = self.form()
+        # se sacan los campos obligatorios
+        required_fields = {(field, form_instance.fields[field]) for field in form_instance.fields}
+
+        # se crean varios sobres
+        sobre_1 = self.create_object(Sobre)
+        sobre_2 = self.create_object(Sobre, diff=True)
+        sobre_3 = self.create_object(Sobre, diff=True)
+
+        # se crean los datos iniciales
+        data = self.get_initial(required_fields)
+        # se marca que si hay totalizado
+        data['totalizado'] = True
+
+        # se genera la respuesta
+        response = self.POST(data=data)
+
+        # se verifica que retorne 200
+        self.assertEqual(response.status_code, constants.RESPONSE_SUCCESS)
+        # se espera que venga la tabla en la respuesta
+        self.assertIn('tabla', response.context)
+        # se saca la tabla
+        tabla = response.context['tabla']
+        # se verifica que el total no sea igual a de un solo sobre
+        self.assertNotEqual(tabla['TOTAL']['total'].__str__(), str(sobre_1.valor))
+        self.assertNotEqual(tabla['TOTAL']['total'].__str__(), str(sobre_2.valor))
+        self.assertNotEqual(tabla['TOTAL']['total'].__str__(), str(sobre_3.valor))
+        # se verifica que el total sea igual a la suma de los 3 sobres
+        self.assertEqual(
+            tabla['TOTAL']['total'].__str__(),
+            str(sobre_1.valor + sobre_2.valor + sobre_3.valor)
+        )
+
+    def test_table_response_structure(self):
+        """Verifica la estructura de la tabla que llega como respuesta."""
+
+        # se crea una instancia del formulario
+        form_instance = self.form()
+        # se sacan los campos obligatorios
+        required_fields = {(field, form_instance.fields[field]) for field in form_instance.fields}
+
+        # se crea un sobre
+        sobre = self.create_object(Sobre)
+
+        # se crean los datos iniciales
+        data = self.get_initial(required_fields)
+        # se marca que no hay totalizado
+        data['totalizado'] = False
+
+        # se genera la respuesta
+        response = self.POST(data=data)
+
+        # se verifica que retorne 200
+        self.assertEqual(response.status_code, constants.RESPONSE_SUCCESS)
+        # se espera que venga la tabla en la respuesta
+        self.assertIn('tabla', response.context)
+        # se saca la tabla
+        tabla = response.context['tabla']
+        # se verifica que el TOTAL este en la tabla principal
+        self.assertIn('TOTAL', tabla)
+        # se verifica que ese total tenga un total
+        self.assertIn('total', tabla['TOTAL'])
+        # se saca el tipo de ingreso, de acuerdo al sobre
+        tipo_ingreso = str(sobre.tipo_ingreso.nombre).upper()
+        # se verifica que el tipo de ingreso salga en la tabla
+        self.assertIn(tipo_ingreso, tabla)
+        # se verifica que el tipo de ingreso tenga un total
+        self.assertIn('total', tabla[tipo_ingreso])
+
+        # se recorren las formas de pago del sobre
+        for forma in Sobre.FORMAS_PAGO:
+            # se verifica que cada forma de pago, este contenido en el total
+            self.assertIn(forma[1], tabla['TOTAL'])
+            # se verifica que cada forma de pago este contenido en el tipo de ingreso
+            self.assertIn(forma[1], tabla[tipo_ingreso])
 
 
 class SobreCreateTest(ViewTestCase):
@@ -232,3 +349,387 @@ class SobreCreateTest(ViewTestCase):
 
     def test_post_error(self):
         super().post_error()
+
+    def test_redirect_to_url(self):
+        """verifica que redireccione a la url seleccionada si el formulario está correcto."""
+
+        # crea los datos iniciales
+        data = self.get_initial(self.required_fields)
+        # marca diligenciado a True
+        data['diligenciado'] = True
+        # crea la peticion/respuesta
+        response = self.POST(data=data)
+
+        # verifica que retorne una redireccion
+        self.assertEqual(response.status_code, constants.RESPONSE_REDIRECT)
+        # verifica que crea el sobre
+        self.assertEqual(Sobre.objects.all().count(), 1)
+        # verifica a donde redirecciona
+        self.assertRedirects(response, self.view.success_url.__str__())
+
+    def test_personas_in_context(self):
+        """Verifica que las personas esten en el contexto."""
+
+        # hace un GET
+        response = self.GET()
+        # verifica que este las personas dentro del contexto
+        self.assertIn('personas', response.context)
+        # hace un POST
+        response = self.POST()
+        # verifica que este las personas dentro del contexto
+        self.assertIn('personas', response.context)
+
+
+class SobreUpdateTest(ViewTestCase):
+    """Pruebas para la vista de SobreUpdate."""
+
+    class Meta:
+        view = SobreUpdate
+
+    def test_get_response_is_200(self):
+        super().response_is_200()
+
+    def test_get_response_is_template(self):
+        super().response_is_template()
+
+    def test_post_error(self):
+        super().post_error()
+
+    def test_redirect_to_url(self):
+        """verifica que redireccione a la url seleccionada si el formulario está correcto."""
+
+        # crea los datos iniciales
+        data = self.get_initial(self.required_fields)
+        # marca diligenciado a True
+        data['diligenciado'] = True
+        # crea la peticion/respuesta
+        response = self.POST(data=data)
+
+        # verifica que retorne una redireccion
+        self.assertEqual(response.status_code, constants.RESPONSE_REDIRECT)
+        # verifica que crea el sobre
+        self.assertEqual(self.model.objects.all().count(), 1)
+        # verifica que el sobre es la instancia
+        self.assertEqual(self.model.objects.first(), self.instance)
+        # verifica a donde redirecciona
+        url = self.view.success_url
+        self.assertRedirects(response, reverse(url, args=(self.instance.id, )).__str__())
+
+    def test_personas_in_context(self):
+        """Verifica que las personas esten en el contexto."""
+
+        # hace un GET
+        response = self.GET()
+        # verifica que este las personas dentro del contexto
+        self.assertIn('personas', response.context)
+        # hace un POST
+        response = self.POST()
+        # verifica que este las personas dentro del contexto
+        self.assertIn('personas', response.context)
+
+
+class PersonaCreateTest(ViewTestCase):
+    """Pruebas para la vista de PersonaCreate."""
+
+    class Meta:
+        view = PersonaCreate
+
+    def test_get_response_is_200(self):
+        super().response_is_200()
+
+    def test_get_response_is_template(self):
+        super().response_is_template()
+
+    def test_post_error(self):
+        super().post_error()
+
+    def test_redirect_to_url(self):
+        """verifica que redireccione a la url seleccionada si el formulario está correcto."""
+
+        # crea los datos iniciales
+        data = self.get_initial(self.required_fields)
+        # crea la peticion/respuesta
+        response = self.POST(data=data)
+
+        # verifica que retorne una redireccion
+        self.assertEqual(response.status_code, constants.RESPONSE_REDIRECT)
+        # verifica que crea el sobre
+        self.assertEqual(self.model.objects.all().count(), 1)
+        # verifica a donde redirecciona
+        self.assertRedirects(response, self.view.success_url.__str__())
+
+
+class PersonaUpdateTest(ViewTestCase):
+    """Pruebas para la vista de PersonaUpdate."""
+
+    class Meta:
+        view = PersonaUpdate
+
+    def test_get_response_is_200(self):
+        super().response_is_200()
+
+    def test_get_response_is_template(self):
+        super().response_is_template()
+
+    def test_post_error(self):
+        super().post_error()
+
+    def test_redirect_to_url(self):
+        """verifica que redireccione a la url seleccionada si el formulario está correcto."""
+
+        # crea los datos iniciales
+        data = self.get_initial(self.required_fields)
+        # crea la peticion/respuesta
+        response = self.POST(data=data)
+
+        # verifica que retorne una redireccion
+        self.assertEqual(response.status_code, constants.RESPONSE_REDIRECT)
+        # verifica que crea el sobre
+        self.assertEqual(self.model.objects.all().count(), 1)
+        # verifica que el sobre es la instancia
+        self.assertEqual(self.model.objects.first(), self.instance)
+        # verifica a donde redirecciona
+        url = self.view.success_url
+        self.assertRedirects(response, reverse(url, args=(self.instance.id, )).__str__())
+
+
+class TipoIngresoCreateTest(ViewTestCase):
+    """Pruebas para la vista de TipoIngresoCreate."""
+
+    class Meta:
+        view = TipoIngresoCreate
+
+    def test_get_response_is_200(self):
+        super().response_is_200()
+
+    def test_get_response_is_template(self):
+        super().response_is_template()
+
+    def test_post_error(self):
+        super().post_error()
+
+    def test_redirect_to_url(self):
+        """verifica que redireccione a la url seleccionada si el formulario está correcto."""
+
+        # crea los datos iniciales
+        data = self.get_initial(self.required_fields)
+        # crea la peticion/respuesta
+        response = self.POST(data=data)
+
+        # verifica que retorne una redireccion
+        self.assertEqual(response.status_code, constants.RESPONSE_REDIRECT)
+        # verifica que crea el sobre
+        self.assertEqual(self.model.objects.all().count(), 1)
+        # verifica a donde redirecciona
+        self.assertRedirects(response, self.view.success_url.__str__())
+
+
+class TipoIngresoUpdateTest(ViewTestCase):
+    """Pruebas para la vista de TipoIngresoUpdate."""
+
+    class Meta:
+        view = TipoIngresoUpdate
+
+    def test_get_response_is_200(self):
+        super().response_is_200()
+
+    def test_get_response_is_template(self):
+        super().response_is_template()
+
+    def test_post_error(self):
+        super().post_error()
+
+    def test_redirect_to_url(self):
+        """verifica que redireccione a la url seleccionada si el formulario está correcto."""
+
+        # crea los datos iniciales
+        data = self.get_initial(self.required_fields)
+        # crea la peticion/respuesta
+        response = self.POST(data=data)
+
+        # verifica que retorne una redireccion
+        self.assertEqual(response.status_code, constants.RESPONSE_REDIRECT)
+        # verifica que crea el sobre
+        self.assertEqual(self.model.objects.all().count(), 1)
+        # verifica que el sobre es la instancia
+        self.assertEqual(self.model.objects.first(), self.instance)
+        # verifica a donde redirecciona
+        url = self.view.success_url
+        self.assertRedirects(response, reverse(url, args=(self.instance.id, )).__str__())
+
+
+class ObservacionCreateTest(ViewTestCase):
+    """Pruebas para la vista de ObservacionCreate."""
+
+    class Meta:
+        view = ObservacionCreate
+
+    def test_get_response_is_200(self):
+        super().response_is_200()
+
+    def test_get_response_is_template(self):
+        super().response_is_template()
+
+    def test_post_error(self):
+        super().post_error()
+
+    def test_redirect_to_url(self):
+        """verifica que redireccione a la url seleccionada si el formulario está correcto."""
+
+        # crea los datos iniciales
+        data = self.get_initial(self.required_fields)
+        # crea la peticion/respuesta
+        response = self.POST(data=data)
+
+        # verifica que retorne una redireccion
+        self.assertEqual(response.status_code, constants.RESPONSE_REDIRECT)
+        # verifica que crea el sobre
+        self.assertEqual(self.model.objects.all().count(), 1)
+        # verifica a donde redirecciona
+        self.assertRedirects(response, self.view.success_url.__str__())
+
+
+class ObservacionUpdateTest(ViewTestCase):
+    """Pruebas para la vista de ObservacionUpdate."""
+
+    class Meta:
+        view = ObservacionUpdate
+
+    def test_get_response_is_200(self):
+        super().response_is_200()
+
+    def test_get_response_is_template(self):
+        super().response_is_template()
+
+    def test_post_error(self):
+        super().post_error()
+
+    def test_redirect_to_url(self):
+        """verifica que redireccione a la url seleccionada si el formulario está correcto."""
+
+        # crea los datos iniciales
+        data = self.get_initial(self.required_fields)
+        # crea la peticion/respuesta
+        response = self.POST(data=data)
+
+        # verifica que retorne una redireccion
+        self.assertEqual(response.status_code, constants.RESPONSE_REDIRECT)
+        # verifica que crea el sobre
+        self.assertEqual(self.model.objects.all().count(), 1)
+        # verifica que el sobre es la instancia
+        self.assertEqual(self.model.objects.first(), self.instance)
+        # verifica a donde redirecciona
+        url = self.view.success_url
+        self.assertRedirects(response, reverse(url, args=(self.instance.id, )).__str__())
+
+
+class UserCreateTest(ViewTestCase):
+    """Pruebas para la vista de UserCreate."""
+
+    class Meta:
+        view = UserCreate
+
+    def test_get_response_is_200(self):
+        super().response_is_200()
+
+    def test_get_response_is_template(self):
+        super().response_is_template()
+
+    def test_post_error(self):
+        super().post_error()
+
+    def test_redirect_to_url(self):
+        """verifica que redireccione a la url seleccionada si el formulario está correcto."""
+
+        # crea los datos iniciales
+        data = self.get_initial(self.required_fields)
+        # crea la peticion/respuesta
+        response = self.POST(data=data)
+
+        # verifica que retorne una redireccion
+        self.assertEqual(response.status_code, constants.RESPONSE_REDIRECT)
+        # verifica que crea el usuario
+        self.assertEqual(self.model.objects.all().count(), 2)
+        # verifica a donde redirecciona
+        self.assertRedirects(response, self.view.success_url.__str__())
+
+
+class PersonaListTest(ViewTestCase):
+    """Pruebas para la vista de PersonaList."""
+
+    class Meta:
+        view = PersonaList
+
+    def test_get_response_is_200(self):
+        super().response_is_200()
+
+    def test_get_response_is_template(self):
+        super().response_is_template()
+
+
+class TipoIngresoListTest(ViewTestCase):
+    """Pruebas para la vista de TipoIngresoList."""
+
+    class Meta:
+        view = TipoIngresoList
+
+    def test_get_response_is_200(self):
+        super().response_is_200()
+
+    def test_get_response_is_template(self):
+        super().response_is_template()
+
+
+class SetPasswordViewTest(ViewTestCase):
+    """Pruebas para la vista de SetPasswordView."""
+
+    class Meta:
+        view = SetPasswordView
+
+    def test_get_response_is_200(self):
+        super().response_is_200()
+
+    def test_get_response_is_template(self):
+        super().response_is_template()
+
+    def test_post_error(self):
+        super().post_error()
+
+    def test_redirect_to_url(self):
+        """verifica que redireccione a la url seleccionada si el formulario está correcto."""
+
+        # crea los datos iniciales
+        data = self.get_initial(self.required_fields)
+        # crea la peticion/respuesta
+        response = self.POST(data=data)
+
+        # verifica que retorne una redireccion
+        self.assertEqual(response.status_code, constants.RESPONSE_REDIRECT)
+        # verifica a donde redirecciona
+        self.assertRedirects(response, self.view.success_url.__str__())
+
+
+class ObservacionListTest(ViewTestCase):
+    """Pruebas para la vista de ObservacionList."""
+
+    class Meta:
+        view = ObservacionList
+
+    def test_get_response_is_200(self):
+        super().response_is_200()
+
+    def test_get_response_is_template(self):
+        super().response_is_template()
+
+
+class UserListTest(ViewTestCase):
+    """Pruebas para la vista de UserList."""
+
+    class Meta:
+        view = UserList
+
+    def test_get_response_is_200(self):
+        super().response_is_200()
+
+    def test_get_response_is_template(self):
+        super().response_is_template()

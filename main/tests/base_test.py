@@ -94,11 +94,13 @@ class CustomBaseTestCase(TestCase):
             return response[1]
         raise ValueError("Cannot find 'content-type' in {}".format(response.__class__.__name__))
 
-    def create_object(self, model_class):
+    def create_object(self, model_class, diff=False):
         """Crea un objeto, con sus campos relacionados."""
 
         try:
-            return model_class.objects.get()
+            if not diff:
+                return model_class.objects.get()
+            raise model_class.DoesNotExist
         except model_class.DoesNotExist:
             # inicializa una lista
             field_list = []
@@ -355,6 +357,13 @@ class ViewTestCase(CustomBaseTestCase):
         super().setUp()
         self.url_base = self.app + ':{}'
         self.template_base = self.app + '/{}'
+        if hasattr(self.view, 'form_class'):
+            self.form = getattr(self.view, 'form_class')
+            form = self.form()
+            self.required_fields = {
+                (field, form.fields[field]) for field in form.fields if form.fields[field].required is True
+            }
+        self.model = getattr(self.view, 'model', None)
 
     def get_url(self):
         """Retorna la url para la vista de la prueba."""
@@ -365,9 +374,10 @@ class ViewTestCase(CustomBaseTestCase):
                 # si es un UpdateView
                 if UpdateView in getattr(self.view, '__mro__', [None]):
                     # retorna la url, con argumentos
+                    self.instance = self.create_object(self.view.model)
                     return reverse(
                         self.url_base.format(url.name),
-                        args=(self.view.model.objects.first().id, )
+                        args=(self.instance.id, )
                     )
                 # retorna la url sin argumentos
                 return reverse(self.url_base.format(url.name))
