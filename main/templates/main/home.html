@@ -1,1 +1,29 @@
 {% extends "base.html" %}
+{% load i18n humanize %}
+
+{% block content %}
+<div class="row">
+    <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
+        <div class="tile-stats">
+            <div class="icon">
+                <i class="fa fa-caret-square-o-right"></i>
+            </div>
+            <div class="count">${{ total_mes|intcomma }}</div>
+
+            <h3>{% trans "Ingresos este mes" %}</h3>
+            <p>.</p>
+        </div>
+    </div>
+    <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
+        <div class="tile-stats">
+            <div class="icon">
+                <i class="fa fa-caret-square-o-right"></i>
+            </div>
+            <div class="count">{{ numero_sobres|intcomma }}</div>
+
+            <h3>{% trans "Numero de Sobres" %}</h3>
+            <p>.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

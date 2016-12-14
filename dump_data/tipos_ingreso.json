@@ -1,0 +1,1 @@
+[{"fields": {"nombre": "Patrocinio"}, "pk": 1, "model": "main.tipoingreso"}, {"fields": {"nombre": "Ofrenda"}, "pk": 2, "model": "main.tipoingreso"}, {"fields": {"nombre": "Diezmos"}, "pk": 3, "model": "main.tipoingreso"}]

@@ -8,7 +8,7 @@ from django.shortcuts import render, redirect
 from django.utils.translation import ugettext as _
 from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic import ListView, FormView
-
+from django.utils import timezone
 
 # Locale imports
 from .constants import MAIN, ERROR_FORM, INFO_FORM
@@ -71,7 +71,27 @@ def login_view(request):
 @login_required
 def home_view(request):
     """Vista que retorna el inicio."""
-    return render(request, MAIN.format('home.html'), {})  # retorna al home
+
+    user = request.user
+    data = {}
+
+    if group_required('administrador')(user):
+        hoy = timezone.now().date()
+        inicio_mes = datetime.date(year=hoy.year, month=hoy.month, day=1)
+
+        delta = datetime.timedelta(days=1)
+        if (hoy + delta).month == inicio_mes.month:
+            hoy += delta
+
+        sobres = Sobre.objects.filter(
+            fecha__range=(inicio_mes, hoy)
+        )
+
+        total = sobres.aggregate(total=Sum('valor'))['total'] or 0
+        data['total_mes'] = total
+        data['numero_sobres'] = sobres.count()
+
+    return render(request, MAIN.format('home.html'), data)  # retorna al home
 
 
 def logout_view(request):
