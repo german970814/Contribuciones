@@ -188,7 +188,8 @@ class FormularioReporteContribuciones(FechasRangoFormMixin):
 
     totalizado = forms.BooleanField(label=_('Toda la congregacion'), required=False)
     persona = forms.ModelChoiceField(
-        queryset=Persona.objects.all(), label=_('Persona'), required=False
+        queryset=Persona.objects.all().only('nombre', 'primer_apellido', 'cedula'),
+        label=_('Persona'), required=False
     )
 
     def __init__(self, *args, **kwargs):

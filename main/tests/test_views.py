@@ -189,13 +189,17 @@ class ListarSobresTest(ViewTestCase):
 
         # se crean los datos
         hoy = datetime.date.today().strftime(constants.DATE_FORMAT)
+        manana = (datetime.date.today() + datetime.timedelta(days=1)).strftime(constants.DATE_FORMAT)
         # se crea la peticion POST
         response = self.POST(data={
             'fecha_inicial': hoy,
-            'fecha_final': hoy
+            'fecha_final': manana
         })
+
         # se verifica que el sobre este en el contexto
-        self.assertIn(sobre, response.context['sobre_list'])
+        self.assertContains(response, sobre.valor)
+        self.assertContains(response, sobre.persona.nombre)
+        self.assertContains(response, reverse(self.url_base.format('editar_sobre'), args=(sobre.id, )))
 
 
 class ReporteContribuciones(ViewTestCase):

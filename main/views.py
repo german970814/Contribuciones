@@ -91,6 +91,14 @@ def home_view(request):
         data['total_mes'] = total
         data['numero_sobres'] = sobres.count()
 
+        # totales = {}
+        # for tipo in TipoIngreso.objects.all():
+        #     rango = sobres.filter(tipo_ingreso_id=tipo.id)
+        #     valor = rango.aggregate(total=Sum('valor'))['total'] or 0
+        #     totales[tipo.__str__()] = valor
+        # data['totales'] = totales
+        # print(totales)
+
     return render(request, MAIN.format('home.html'), data)  # retorna al home
 
 
@@ -115,8 +123,12 @@ def listar_sobres(request):
 
             sobres = Sobre.objects.filter(
                 fecha__range=(fecha_inicial, fecha_final)
+            ).select_related('persona', 'tipo_ingreso', 'observaciones').only(
+                'fecha', 'diligenciado', 'valor', 'forma_pago', 'persona', 'tipo_ingreso',
+                'observaciones'
             )
 
+            sobres = sobres.iterator()
             data['sobre_list'] = sobres
 
             messages.success(
@@ -166,7 +178,8 @@ def reporte_contribuciones(request):
             tabla = OrderedDict({'TOTAL': {'total': 0}})
 
             # se recorren todos los tipos de ingresos
-            for tipo in TipoIngreso.objects.prefetch_related('sobres').all():
+            queryset = TipoIngreso.objects.prefetch_related('sobres').all()
+            for tipo in queryset.iterator():
                 total = 0
                 # se crea una variable temporal, para guardar los totales por tipo de ingreso
                 _totales = {'total': 0}  # se inicializa un total a 0
@@ -233,7 +246,8 @@ class SobreCreate(CustomMixinView, CreateView):
     group_required = ('administrador', 'digitador', )
 
     def render_to_response(self, context, **response_kwargs):
-        context['personas'] = Persona.objects.all()  # agrega el queryset de personas
+        persona_queryset = Persona.objects.all().only('nombre', 'primer_apellido', 'cedula')
+        context['personas'] = persona_queryset.iterator()  # agrega el queryset de personas
         return super().render_to_response(context, **response_kwargs)
 
 
@@ -247,7 +261,8 @@ class SobreUpdate(CustomMixinView, UpdateView):
     group_required = ('administrador', )
 
     def render_to_response(self, context, **response_kwargs):
-        context['personas'] = Persona.objects.all()  # agrega el queryset de personas
+        persona_queryset = Persona.objects.all().only('nombre', 'primer_apellido', 'cedula')
+        context['personas'] = persona_queryset.iterator()  # agrega el queryset de personas
         return super().render_to_response(context, **response_kwargs)
 
     def get_form_kwargs(self):
