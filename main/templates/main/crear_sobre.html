@@ -261,45 +261,11 @@
         $('input#id_diligenciado_0').parent().click(function (event) {
             let $children = $(this).find('input');
             $children.change();
-            // if ($children.is(':checked')) {
-            //     $(this)
-            //         .addClass('btn-primary')
-            //         .removeClass('btn-default');
-            //     $('input#id_diligenciado_1').parent()
-            //         .removeClass('btn-primary')
-            //         .addClass('btn-default');
-            //     $children.prop('checked', false);
-            // } else {
-            //     $(this)
-            //         .removeClass('btn-primary')
-            //         .addClass('btn-default');
-            //     $('input#id_diligenciado_1').parent()
-            //         .removeClass('btn-default')
-            //         .addClass('btn-primary');
-            //     $children.prop('checked', true);
-            // }
         });
 
         $('input#id_diligenciado_1').parent().click(function (event) {
             let $children = $(this).find('input');
             $children.change();
-            // if (!$children.is(':checked')) {
-            //     $(this)
-            //         .removeClass('btn-primary')
-            //         .addClass('btn-default');
-            //     $('input#id_diligenciado_0').parent()
-            //         .removeClass('btn-default')
-            //         .addClass('btn-primary');
-            //     $children.prop('checked', true);
-            // } else {
-            //     $(this)
-            //         .addClass('btn-primary')
-            //         .removeClass('btn-default');
-            //     $('input#id_diligenciado_0').parent()
-            //         .removeClass('btn-primary')
-            //         .addClass('btn-default');
-            //     $children.prop('checked', false);
-            // }
         });
 
         $('input#id_diligenciado_0').on('change', function (event) {
@@ -344,8 +310,8 @@
             $('#{{ form.primer_apellido.id_for_label }}, #{{ form.segundo_apellido.id_for_label }}, #{{ form.cedula.id_for_label }}, #{{ form.telefono.id_for_label }}')
                 .attr('readonly', true);
         }
-        $('#id_diligenciado_0, #id_diligenciado_1').change();
         {% endif %}
+        $('#id_diligenciado_0, #id_diligenciado_1').change();
 
     })
 </script>

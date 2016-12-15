@@ -11,7 +11,7 @@ from django.views.generic import ListView, FormView
 from django.utils import timezone
 
 # Locale imports
-from .constants import MAIN, ERROR_FORM, INFO_FORM
+from .constants import MAIN, ERROR_FORM, INFO_FORM, DATE_FORMAT
 from .decorators import group_required
 from .mixins import CustomMixinView, FechasRangoFormMixin
 from .models import Sobre, Persona, Observacion, TipoIngreso
@@ -249,6 +249,32 @@ class SobreCreate(CustomMixinView, CreateView):
         persona_queryset = Persona.objects.all().only('nombre', 'primer_apellido', 'cedula')
         context['personas'] = persona_queryset.iterator()  # agrega el queryset de personas
         return super().render_to_response(context, **response_kwargs)
+
+    def form_valid(self, form):
+        self._valid_form = form  # se guarda el formulario valido
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        url = super().get_success_url()
+        # si existe el formulario valido
+        if hasattr(self, '_valid_form'):
+            form = self._valid_form
+            # obtiene del formulario la fecha
+            date = form.cleaned_data.get('fecha')
+            # lo convierte a string
+            date = date.strftime(DATE_FORMAT)
+            # lo inserta en la url
+            return url + '?{}={}'.format('date', date)
+        return url
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()  # se sacan las kwargs
+        get_data = self.request.GET  # se obtienen los datos del GET
+        if 'date' in get_data:  # se verifica que date este en el GET
+            date = get_data['date']  # obtiene la fecha
+            kwargs['initial'] = {'fecha': date}  # se crea el diccionario inicial
+        # retorna las llaves
+        return kwargs
 
 
 class SobreUpdate(CustomMixinView, UpdateView):

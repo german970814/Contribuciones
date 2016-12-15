@@ -369,7 +369,21 @@ class SobreCreateTest(ViewTestCase):
         # verifica que crea el sobre
         self.assertEqual(Sobre.objects.all().count(), 1)
         # verifica a donde redirecciona
-        self.assertRedirects(response, self.view.success_url.__str__())
+        url = self.view.success_url.__str__()
+        url += '?{}={}'.format('date', data['fecha'].strftime(constants.DATE_FORMAT))
+        self.assertRedirects(response, url)
+
+    def test_form_bound_with_date_from_url(self):
+        """Prueba que el formulario esté lleno con los datos del GET."""
+
+        # crea la fecha de hoy
+        hoy = datetime.date.today().strftime(constants.DATE_FORMAT)
+
+        # hace un GET
+        response = self.GET(url=self.get_url() + '?{}={}'.format('date', hoy))
+
+        # verifica que la fecha esté en la vista
+        self.assertContains(response, hoy)
 
     def test_personas_in_context(self):
         """Verifica que las personas esten en el contexto."""

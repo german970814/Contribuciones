@@ -92,6 +92,9 @@ class FormularioCrearSobre(CustomModelForm):
             self.fields[name] = field
             self.fields[name].required = False  # no los requiere
 
+        if not self.is_bound:
+            self.fields['diligenciado'].initial = True
+
     def clean(self, *args, **kwargs):
         cleaned_data = super().clean(*args, **kwargs)
 
