@@ -26,6 +26,10 @@ from .forms import (
 from collections import OrderedDict
 import datetime
 
+import calendar
+from django.utils.translation import activate
+from django.template.defaultfilters import date as date_name
+import json
 
 def login_view(request):
     """Vista de login."""
@@ -76,28 +80,44 @@ def home_view(request):
     data = {}
 
     if group_required('administrador')(user):
-        hoy = timezone.now().date()
+        _hoy = timezone.now().date()
+        hoy = _hoy
         inicio_mes = datetime.date(year=hoy.year, month=hoy.month, day=1)
 
         delta = datetime.timedelta(days=1)
-        if (hoy + delta).month == inicio_mes.month:
-            hoy += delta
+        # if (hoy + delta).month == inicio_mes.month:
+        hoy += delta
+
+        rango_mes = (inicio_mes, hoy)
 
         sobres = Sobre.objects.filter(
-            fecha__range=(inicio_mes, hoy)
+            fecha__range=rango_mes
         )
 
         total = sobres.aggregate(total=Sum('valor'))['total'] or 0
         data['total_mes'] = total
-        data['numero_sobres'] = sobres.count()
+        data['numero_sobres_mes'] = sobres.count()
+        data['total_sin_diligenciar'] = sobres.filter(diligenciado=False).count()
 
-        # totales = {}
-        # for tipo in TipoIngreso.objects.all():
-        #     rango = sobres.filter(tipo_ingreso_id=tipo.id)
-        #     valor = rango.aggregate(total=Sum('valor'))['total'] or 0
-        #     totales[tipo.__str__()] = valor
-        # data['totales'] = totales
-        # print(totales)
+        totales = {}
+        # hoy = _hoy
+        dates = [rango_mes]  # list(tuple())
+
+        for x in range(4, 21, 4):
+            delta = hoy - datetime.timedelta(weeks=x)
+            __n__, month_days = calendar.monthrange(delta.year, delta.month)
+            date = datetime.date(year=delta.year, month=delta.month, day=1)
+            dates.append((date, date + datetime.timedelta(days=month_days - 1)))
+
+        for tipo in TipoIngreso.objects.all():
+            for date in reversed(dates):
+                sobres = tipo.sobres.filter(fecha__range=date)
+                valor = sobres.aggregate(total=Sum('valor'))['total'] or 0
+                if tipo.__str__() not in totales:
+                    totales[tipo.__str__()] = OrderedDict({date_name(date[0], 'F'): valor})
+                else:
+                    totales[tipo.__str__()][date_name(date[0], 'F')] = valor
+        data['totales'] = json.dumps(totales)
 
     return render(request, MAIN.format('home.html'), data)  # retorna al home
 
