@@ -84,9 +84,7 @@ def home_view(request):
         hoy = _hoy
         inicio_mes = datetime.date(year=hoy.year, month=hoy.month, day=1)
 
-        delta = datetime.timedelta(days=1)
-        # if (hoy + delta).month == inicio_mes.month:
-        hoy += delta
+        hoy += datetime.timedelta(days=1)
 
         rango_mes = (inicio_mes, hoy)
 
@@ -100,23 +98,49 @@ def home_view(request):
         data['total_sin_diligenciar'] = sobres.filter(diligenciado=False).count()
 
         totales = {}
-        # hoy = _hoy
-        dates = [rango_mes]  # list(tuple())
 
-        for x in range(4, 21, 4):
-            delta = hoy - datetime.timedelta(weeks=x)
-            __n__, month_days = calendar.monthrange(delta.year, delta.month)
-            date = datetime.date(year=delta.year, month=delta.month, day=1)
-            dates.append((date, date + datetime.timedelta(days=month_days - 1)))
+        _tipos = TipoIngreso.objects.all().values_list('nombre', flat=True)
 
-        for tipo in TipoIngreso.objects.all():
-            for date in reversed(dates):
-                sobres = tipo.sobres.filter(fecha__range=date)
-                valor = sobres.aggregate(total=Sum('valor'))['total'] or 0
-                if tipo.__str__() not in totales:
-                    totales[tipo.__str__()] = OrderedDict({date_name(date[0], 'F'): valor})
+        start = hoy.month - 5
+        end = hoy.month + 1
+        year = hoy.year
+
+        if start < 5:
+            start = 12 - 5 + hoy.month
+        if end < start:
+            end = 12 + end
+
+        for month in range(start, end):
+            if end >= 14:
+                if month >= 13:
+                    year = hoy.year
                 else:
-                    totales[tipo.__str__()][date_name(date[0], 'F')] = valor
+                    year = hoy.year - 1
+
+            if month > 12:
+                month -= 12
+
+            sobres = Sobre.objects.filter(
+                fecha__month=month, fecha__year=year
+            ).values('tipo_ingreso__nombre').annotate(total=Sum('valor'))
+
+            mes = date_name(datetime.date(year=year, month=month, day=1), 'F')
+
+            tipos = [x for x in _tipos]
+
+            for tipo in sobres:
+                if tipo['tipo_ingreso__nombre'] not in totales:
+                    totales[tipo['tipo_ingreso__nombre']] = OrderedDict(
+                        {mes: tipo['total']}
+                    )
+                else:
+                    totales[tipo['tipo_ingreso__nombre']][mes] = tipo['total']
+
+                tipos.remove(tipo['tipo_ingreso__nombre'])
+
+            for tipo in tipos:
+                totales[tipo][mes] = 0
+
         data['totales'] = json.dumps(totales)
 
     return render(request, MAIN.format('home.html'), data)  # retorna al home
