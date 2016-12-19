@@ -20,7 +20,10 @@ if settings.DEBUG:
     )
 
 if settings.DEBUG:
-    import debug_toolbar
-    urlpatterns += [
-        url(r'^__debug__/', include(debug_toolbar.urls)),
-    ]
+    try:
+        import debug_toolbar
+        urlpatterns += [
+            url(r'^__debug__/', include(debug_toolbar.urls)),
+        ]
+    except:
+        pass

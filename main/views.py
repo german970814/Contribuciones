@@ -139,7 +139,12 @@ def home_view(request):
                 tipos.remove(tipo['tipo_ingreso__nombre'])
 
             for tipo in tipos:
-                totales[tipo][mes] = 0
+                if tipo in totales:
+                    totales[tipo][mes] = 0
+                else:
+                    totales[tipo] = {
+                        mes: 0
+                    }
 
         data['totales'] = json.dumps(totales)
 
