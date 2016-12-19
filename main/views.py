@@ -142,9 +142,9 @@ def home_view(request):
                 if tipo in totales:
                     totales[tipo][mes] = 0
                 else:
-                    totales[tipo] = {
+                    totales[tipo] = OrderedDict({
                         mes: 0
-                    }
+                    })
 
         data['totales'] = json.dumps(totales)
 
