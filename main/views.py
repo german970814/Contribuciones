@@ -93,6 +93,7 @@ def home_view(request):
         )
 
         total = sobres.aggregate(total=Sum('valor'))['total'] or 0
+        data['admin'] = True
         data['total_mes'] = total
         data['numero_sobres_mes'] = sobres.count()
         data['total_sin_diligenciar'] = sobres.filter(diligenciado=False).count()

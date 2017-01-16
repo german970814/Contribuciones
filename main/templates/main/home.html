@@ -2,64 +2,40 @@
 {% load i18n humanize staticfiles %}
 
 {% block content %}
-<div class="row tile_count">
-    <div class="col-md-4 col-sm-4 col-xs-6 tile_stats_count">
-        <span class="count_top"><i class="fa fa-money"></i> {% trans "Ingresos este mes" %}</span>
-        <div class="count">${{ total_mes|intcomma }}</div>
-        <!--<span class="count_bottom"><i class="green">4% </i> From last Week</span>-->
-    </div>
-    <div class="col-md-4 col-sm-4 col-xs-6 tile_stats_count">
-        <span class="count_top"><i class="fa fa-credit-card"></i> {% trans "Numero de Sobres" %}</span>
-        <div class="count">{{ numero_sobres_mes|intcomma }}</div>
-        <!--<span class="count_bottom"><i class="green"><i class="fa fa-sort-asc"></i>3% </i> From last Week</span>-->
-    </div>
-    <div class="col-md-4 col-sm-4 col-xs-6 tile_stats_count">
-        <span class="count_top"><i class="fa fa-ban"></i> {% trans "Sobres sin diligenciar" %}</span>
-        <div class="count green">{{ total_sin_diligenciar }}</div>
-        <!--<span class="count_bottom"><i class="green"><i class="fa fa-sort-asc"></i>34% </i> From last Week</span>-->
-    </div>
-</div>
-{% comment %}
-<div class="row">
-    <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
-        <div class="tile-stats">
-            <div class="icon">
-                <i class="fa fa-caret-square-o-right"></i>
-            </div>
-            <div class="count">${{ total_mes|intcomma }}</div>
-
-            <h3>{% trans "Ingresos este mes" %}</h3>
-            <p>.</p>
-        </div>
-    </div>
-    <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
-        <div class="tile-stats">
-            <div class="icon">
-                <i class="fa fa-caret-square-o-right"></i>
-            </div>
-            <div class="count">{{ numero_sobres_mes|intcomma }}</div>
-
-            <h3>{% trans "Numero de Sobres" %}</h3>
-            <p>.</p>
-        </div>
-    </div>
-</div>
-{% endcomment %}
-<div class="row">
-    <div class="table-responsive">
-        <div class="col-md-12 col-sm-12 col-xs-12">
-            <div class="x_panel">
-                <div class="x_title">
-                    <h2>{% trans "Gráficos" %}</h2>
-                    <div class="clearfix"></div>
-                </div>
-                <div class="x_content">
-                    <div id="echart_line" style="height:400px;"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+{% if admin %}
+  <div class="row tile_count">
+      <div class="col-md-4 col-sm-4 col-xs-6 tile_stats_count">
+          <span class="count_top"><i class="fa fa-money"></i> {% trans "Ingresos este mes" %}</span>
+          <div class="count">${{ total_mes|intcomma }}</div>
+          <!--<span class="count_bottom"><i class="green">4% </i> From last Week</span>-->
+      </div>
+      <div class="col-md-4 col-sm-4 col-xs-6 tile_stats_count">
+          <span class="count_top"><i class="fa fa-credit-card"></i> {% trans "Numero de Sobres" %}</span>
+          <div class="count">{{ numero_sobres_mes|intcomma }}</div>
+          <!--<span class="count_bottom"><i class="green"><i class="fa fa-sort-asc"></i>3% </i> From last Week</span>-->
+      </div>
+      <div class="col-md-4 col-sm-4 col-xs-6 tile_stats_count">
+          <span class="count_top"><i class="fa fa-ban"></i> {% trans "Sobres sin diligenciar" %}</span>
+          <div class="count green">{{ total_sin_diligenciar }}</div>
+          <!--<span class="count_bottom"><i class="green"><i class="fa fa-sort-asc"></i>34% </i> From last Week</span>-->
+      </div>
+  </div>
+  <div class="row">
+      <div class="table-responsive">
+          <div class="col-md-12 col-sm-12 col-xs-12">
+              <div class="x_panel">
+                  <div class="x_title">
+                      <h2>{% trans "Gráficos" %}</h2>
+                      <div class="clearfix"></div>
+                  </div>
+                  <div class="x_content">
+                      <div id="echart_line" style="height:400px;"></div>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+{% endif %}
 {% endblock %}
 
 
