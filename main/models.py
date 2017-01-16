@@ -4,6 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 
 # Locale Imports
 from .mixins import CustomModel
+from .managers import PersonaQuerySet
 
 
 class TipoIngreso(CustomModel, models.Model):
@@ -27,6 +28,8 @@ class Persona(CustomModel, models.Model):
     segundo_apellido = models.CharField(verbose_name=_('segundo apellido'), max_length=255, blank=True)
     cedula = models.BigIntegerField(verbose_name=_('Identificación'), unique=True)
     telefono = models.BigIntegerField(verbose_name=_('teléfono'), blank=True, null=True)
+
+    objects = PersonaQuerySet().as_manager()
 
     class Meta:
         verbose_name = _('Persona')

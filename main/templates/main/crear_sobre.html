@@ -196,9 +196,28 @@
 
         var personas = {};
 
+        // $.ajax({
+        //     url: '{% url "main:api>get_personas" %}',
+        //     data: {q: 'german'},
+        //     success: function (data) {
+        //         console.log(data);
+        //         var _data = $.map(data.personas, function(value, key) {
+        //             return {
+        //                 value: '{0} {1}'.format(
+        //                   value.fields.nombre.toUpperCase(), value.fields.primer_apellido.toUpperCase()
+        //                 ),
+        //                 data: value.pk
+        //             }
+        //         });
+        //         console.log(_data);
+        //     }
+        // });
+
+        {% comment %}
         {% for persona in personas %}
         personas["{{ persona.id }}"] = "{{ persona }}";
         {% endfor %}
+        {% endcomment %}
 
         var personas_array = $.map(personas, function(value, key) {
             return {
@@ -208,8 +227,57 @@
         })
 
         // initialize autocomplete with custom appendTo
+        // $nombre.autocomplete({
+        //     lookup: personas_array,
+        //     appendTo: '#autocomplete-container',
+        //     onSelect: function(suggestion) {
+        //         let $id = suggestion['data'];
+        //         $.ajax({
+        //             type: 'GET',
+        //             url: '{% url "main:api>get_persona" 0 %}'.replace('0', $id),
+        //             data: {
+        //                 csrfmiddlewaretoken: $CSRF.val()
+        //             },
+        //             success: function (data) {
+        //                 if (data['{{ RESPONSE_CODE }}'] == {{ RESPONSE_SUCCESS|safe }}) {
+        //                     let obj = data['persona']
+        //                     for (field in obj) {
+        //                         if (field == 'id') {
+        //                             $('input[name="hidden"]').val(obj[field].toString());
+        //                             continue;
+        //                         }
+        //                         try {
+        //                             $('input[name="' + field.toString() + '"]').val(obj[field].toString().toUpperCase()).attr('readonly', true);
+        //                         } catch (err) {
+        //
+        //                         }
+        //                     }
+        //                     if ($nombre.attr('readonly')) {
+        //                         $nombre.attr('readonly', false);
+        //                     }
+        //                 }
+        //             }
+        //         })
+        //     }
+        // });
+
         $nombre.autocomplete({
-            lookup: personas_array,
+            serviceUrl: '{% url "main:api>get_personas" %}',
+            paramName: 'q',
+            transformResult: function (response) {
+                _response = JSON.parse(response);
+                suggestion = {
+                    suggestions: $.map(_response.personas, function (value, key) {
+                        return {
+                            value: '{0} {1}'.format(
+                                value.fields.nombre.toUpperCase(), value.fields.primer_apellido.toUpperCase()
+                            ),
+                            data: value.pk
+                        }
+                    })
+                }
+                return suggestion;
+            },
             appendTo: '#autocomplete-container',
             onSelect: function(suggestion) {
                 let $id = suggestion['data'];
@@ -220,7 +288,7 @@
                         csrfmiddlewaretoken: $CSRF.val()
                     },
                     success: function (data) {
-                        if (data['response_code'] == 200) {
+                        if (data['{{ RESPONSE_CODE }}'] == {{ RESPONSE_SUCCESS|safe }}) {
                             let obj = data['persona']
                             for (field in obj) {
                                 if (field == 'id') {
