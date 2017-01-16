@@ -79,7 +79,8 @@ def home_view(request):
     user = request.user
     data = {}
 
-    if group_required('administrador')(user):
+    if user.groups.filter(name__icontains='administrador').exists() or user.is_superuser:
+        # (group_required('administrador')(user)(request))
         _hoy = timezone.now().date()
         hoy = _hoy
         inicio_mes = datetime.date(year=hoy.year, month=hoy.month, day=1)
