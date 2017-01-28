@@ -23,9 +23,11 @@ def deploy():
     _update_database(source_folder, env.user, env.host)
     _restart_gunicorn_server(env.user)
 
+
 def _create_directory_structure_if_necessary(site_folder):
     for subfolder in STRUCTURE_PROJECT:
         run('mkdir -p %s/%s' % (site_folder, subfolder))
+
 
 def _get_latest_source(source_folder):
     if exists(source_folder + '/.git'):
@@ -69,16 +71,19 @@ def _update_static_files(source_folder, user, site_name):
         source_folder, user
     ))
 
+
 def _update_database_info(source_folder):
     database_path = source_folder + '/digitacion/database.py'
     sed(database_path, 'NAME = .+$', 'NAME = "contribuciones"')
     sed(database_path, 'USER = .+$', 'USER = "contribuciones"')
     sed(database_path, 'PASSWORD = .+$', 'PASSWORD = "123456"')
 
+
 def _update_database(source_folder, user, site_name):
     run('cd %s && /home/%s/.envs/contribuciones/bin/python3 manage.py migrate --noinput' % (
         source_folder, user
     ))
+
 
 def _restart_gunicorn_server(user):
     run('/home/%s/bin/supervisorctl -c /home/%s/etc/supervisord.conf restart contribucion' % (user, user))

@@ -119,6 +119,11 @@ MEDIA_URL = '/media/'
 
 MEDIA_ROOT = os.path.abspath(os.path.join(BASE_DIR, '../media'))
 
+FILE_UPLOAD_HANDLERS = (
+    'django_excel.ExcelMemoryFileUploadHandler',
+    'django_excel.TemporaryExcelFileUploadHandler'
+)
+
 AUTHENTICATION_BACKENDS = (
     'main.backends.EmailAuthenticationBackend',
     'django.contrib.auth.backends.ModelBackend',
