@@ -5,10 +5,11 @@ from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse, reverse_lazy
 from django.db.models import Sum
 from django.shortcuts import render, redirect
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext as _, activate
 from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic import ListView, FormView
 from django.utils import timezone
+from django.template.defaultfilters import date as date_name
 
 # Locale imports
 from .constants import MAIN, ERROR_FORM, INFO_FORM, DATE_FORMAT
@@ -25,11 +26,9 @@ from .forms import (
 # Python imports
 from collections import OrderedDict
 import datetime
-
 import calendar
-from django.utils.translation import activate
-from django.template.defaultfilters import date as date_name
 import json
+
 
 def login_view(request):
     """Vista de login."""
