@@ -1,4 +1,10 @@
-"""Constantes usadas en la aplicacion"""
+"""Constantes usadas en la aplicacion."""
+
+__author__ = 'German Alzate'
+
+__all__ = [
+    'RESPONSE_SUCCESS', 'RESPONSE_ERROR', 'RESPONSE_DENIED', 'RESPONSE_CODE', 'RESPONSE_NOT_FOUND', 'RESPONSE_REDIRECT'
+]
 
 # CSS
 CSS_ERROR_CLASS = 'parsley-error'

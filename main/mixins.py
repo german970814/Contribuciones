@@ -16,6 +16,9 @@ from django.shortcuts import redirect
 # Locale imports
 from . import constants
 
+# Python imports
+import json
+
 
 class CustomModel(object):
     """Custom class for models instances."""
@@ -201,3 +204,24 @@ class CustomMixinView(object):
             return reverse_lazy(self.success_url, args=(self.object.id, ))
         # de lo contrario, retorna la url
         return super().get_success_url()
+
+
+class CustomQuerySet(object):
+    """Clase modelo para los querysets."""
+
+    def to_json(self, **kwargs):
+        """Metodo de serializado de querysets."""
+
+        from django.core import serializers
+
+        fields = kwargs.pop(
+            'fields',
+            getattr(self.model, 'json_fields', [x.name for x in self.model._meta.fields])
+        )
+
+        queryset = serializers.serialize('json', self, fields=fields, **kwargs)
+
+        if isinstance(queryset, str):
+            return json.loads(queryset)
+
+        return queryset

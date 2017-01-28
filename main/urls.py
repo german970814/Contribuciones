@@ -13,7 +13,8 @@ from .views import (
     TipoIngresoList, ObservacionList, reporte_contribuciones, listar_sobres,
     UserCreate, UserList, SetPasswordView
 )
-from .api import get_persona_api
+from .api import get_persona_api, get_personas_api
+
 
 urlpatterns = [
     url(r'^$', lambda x: redirect('main:login')),
@@ -38,4 +39,5 @@ urlpatterns = [
     url(r'^reportes/contribuciones/$', reporte_contribuciones, name='reporte_contribuciones'),
     # API
     url(r'^api/v1\.1/persona/(?P<id_persona>\d+)/$', get_persona_api, name='api>get_persona'),
+    url(r'^api/v1\.1/persona/all/$', get_personas_api, name='api>get_personas'),
 ]

@@ -2,8 +2,10 @@
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.utils.translation import ugettext as _
+from django.db.models import Q
 
 # Locale imports
+from .decorators import login_required_api
 from .models import Persona
 from .constants import (
     RESPONSE_SUCCESS, RESPONSE_DENIED,
@@ -41,3 +43,29 @@ def get_persona_api(request, id_persona):
 
     # retorna la respuesta en json
     return HttpResponse(json.dumps(data), content_type=CONTENT_TYPE)
+
+
+@login_required_api
+def get_personas_api(request):
+    """Retorna las personas en formato JSON."""
+
+    data = {RESPONSE_CODE: RESPONSE_SUCCESS}
+
+    if request.method == 'GET':
+        value = request.GET.get('q', None)
+
+        if value is not None:
+            queryset = (
+                Q(nombre__icontains=value) | Q(primer_apellido__icontains=value) |
+                Q(segundo_apellido__icontains=value) | Q(cedula__icontains=value)
+            )
+
+            data['personas'] = Persona.objects.filter(queryset).to_json(
+                fields=['nombre', 'primer_apellido', 'cedula']
+            )[0:10]
+        else:
+            data[RESPONSE_CODE] = RESPONSE_ERROR
+    else:
+        data[RESPONSE_CODE] = RESPONSE_DENIED
+
+    return data

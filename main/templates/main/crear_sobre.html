@@ -196,10 +196,6 @@
 
         var personas = {};
 
-        {% for persona in personas %}
-        personas["{{ persona.id }}"] = "{{ persona }}";
-        {% endfor %}
-
         var personas_array = $.map(personas, function(value, key) {
             return {
                 value: value,
@@ -207,9 +203,23 @@
             }
         })
 
-        // initialize autocomplete with custom appendTo
         $nombre.autocomplete({
-            lookup: personas_array,
+            serviceUrl: '{% url "main:api>get_personas" %}',
+            paramName: 'q',
+            transformResult: function (response) {
+                _response = JSON.parse(response);
+                suggestion = {
+                    suggestions: $.map(_response.personas, function (value, key) {
+                        return {
+                            value: '{0} {1}'.format(
+                                value.fields.nombre.toUpperCase(), value.fields.primer_apellido.toUpperCase()
+                            ),
+                            data: value.pk
+                        }
+                    })
+                }
+                return suggestion;
+            },
             appendTo: '#autocomplete-container',
             onSelect: function(suggestion) {
                 let $id = suggestion['data'];
@@ -220,7 +230,7 @@
                         csrfmiddlewaretoken: $CSRF.val()
                     },
                     success: function (data) {
-                        if (data['response_code'] == 200) {
+                        if (data['{{ RESPONSE_CODE }}'] == {{ RESPONSE_SUCCESS|safe }}) {
                             let obj = data['persona']
                             for (field in obj) {
                                 if (field == 'id') {
